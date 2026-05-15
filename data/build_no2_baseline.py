@@ -5,11 +5,13 @@ Pulls Cloud Optimized GeoTIFFs from the MEEO Sentinel-5P open S3 bucket
 applies the qa_value >= 0.75 filter (NO2 product user manual recommendation),
 composites to a monthly mean, and computes zonal mean per ward.
 """
+
 from __future__ import annotations
-import os
+
 import calendar
-from pathlib import Path
+import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 import boto3
 import numpy as np
@@ -83,7 +85,9 @@ def windowed_read(no2_key, qa_key):
 
 def monthly_composite(year, month):
     pairs = list_no2_cogs(year, month)
-    print(f"  {year}-{month:02d}: {len(pairs)} candidate orbits ({ORBIT_HOUR_RANGE[0]}-{ORBIT_HOUR_RANGE[1]}h UTC)")
+    print(
+        f"  {year}-{month:02d}: {len(pairs)} candidate orbits ({ORBIT_HOUR_RANGE[0]}-{ORBIT_HOUR_RANGE[1]}h UTC)"
+    )
     accum = None
     count = None
     transform = None
@@ -113,9 +117,15 @@ def monthly_composite(year, month):
     mean = np.where(count > 0, accum / np.maximum(count, 1), np.nan).astype(np.float32)
     out_path = OUT_DIR / f"no2_{year:04d}_{month:02d}.tif"
     profile = {
-        "driver": "GTiff", "height": mean.shape[0], "width": mean.shape[1],
-        "count": 1, "dtype": "float32", "crs": "EPSG:4326",
-        "transform": transform, "nodata": float("nan"), "compress": "deflate",
+        "driver": "GTiff",
+        "height": mean.shape[0],
+        "width": mean.shape[1],
+        "count": 1,
+        "dtype": "float32",
+        "crs": "EPSG:4326",
+        "transform": transform,
+        "nodata": float("nan"),
+        "compress": "deflate",
     }
     with rasterio.open(out_path, "w", **profile) as dst:
         dst.write(mean, 1)
@@ -127,15 +137,18 @@ def monthly_composite(year, month):
             units="mol/m^2",
             window_bbox_WSEN=",".join(str(x) for x in PILOT_BBOX),
         )
-    print(f"  {year}-{month:02d}: data orbits {n_with_data}/{len(pairs)}, "
-          f"mean={np.nanmean(mean):.3e} mol/m^2 -> {out_path.name}")
+    print(
+        f"  {year}-{month:02d}: data orbits {n_with_data}/{len(pairs)}, "
+        f"mean={np.nanmean(mean):.3e} mol/m^2 -> {out_path.name}"
+    )
     return out_path
 
 
 def aggregate_to_wards(months):
+    import shutil
+
     import geopandas as gpd
     import pandas as pd
-    import shutil
     from rasterstats import zonal_stats
 
     gpkg = HERE / "trellis_delta_wards.gpkg"
@@ -147,13 +160,16 @@ def aggregate_to_wards(months):
             continue
         stats = zonal_stats(pilot, str(tif), stats=["mean", "count"], nodata=float("nan"))
         for ward, st in zip(pilot.itertuples(), stats):
-            rows.append({
-                "wardname": ward.wardname,
-                "lganame": ward.lganame,
-                "year": y, "month": m,
-                "no2_mean_mol_m2": st["mean"],
-                "valid_pixels": st["count"],
-            })
+            rows.append(
+                {
+                    "wardname": ward.wardname,
+                    "lganame": ward.lganame,
+                    "year": y,
+                    "month": m,
+                    "no2_mean_mol_m2": st["mean"],
+                    "valid_pixels": st["count"],
+                }
+            )
     df = pd.DataFrame(rows)
     csv = OUT_DIR / "no2_ward_zonal.csv"
     df.to_csv(csv, index=False)
@@ -161,8 +177,11 @@ def aggregate_to_wards(months):
     if months:
         y, m = months[-1]
         sub = df[(df.year == y) & (df.month == m)].set_index(["lganame", "wardname"])
-        merged = pilot.set_index(["lganame", "wardname"]).join(
-            sub[["no2_mean_mol_m2", "valid_pixels"]]).reset_index()
+        merged = (
+            pilot.set_index(["lganame", "wardname"])
+            .join(sub[["no2_mean_mol_m2", "valid_pixels"]])
+            .reset_index()
+        )
         tmp = "/tmp/trellis_delta_wards.gpkg"
         layer = f"no2_ward_{y:04d}_{m:02d}"
         merged.to_file(tmp, layer=layer, driver="GPKG")
@@ -172,6 +191,7 @@ def aggregate_to_wards(months):
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) > 1:
         months = []
         for arg in sys.argv[1:]:

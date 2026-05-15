@@ -12,6 +12,7 @@ Run from the repository root:
 
 This writes mvp/forecast_dec_2025.json which the dashboards can switch to.
 """
+
 from __future__ import annotations
 
 import json
@@ -30,10 +31,22 @@ current = df[(df.year == 2025) & (df.month == 11)].copy()
 print(f"Reference rows (Nov 2025): {len(current)}")
 
 FEATURES = [
-    c for c in df.columns
-    if c.endswith("_lag1") or c.endswith("_lag2") or c.endswith("_lag3")
-    or c in ("month_sin", "month_cos", "flare_total_bcm_13yr",
-              "fac_total", "fac_phc", "pop_total", "pop_under5", "ndvi_annual")
+    c
+    for c in df.columns
+    if c.endswith("_lag1")
+    or c.endswith("_lag2")
+    or c.endswith("_lag3")
+    or c
+    in (
+        "month_sin",
+        "month_cos",
+        "flare_total_bcm_13yr",
+        "fac_total",
+        "fac_phc",
+        "pop_total",
+        "pop_under5",
+        "ndvi_annual",
+    )
 ]
 
 # Override seasonal encoding to point at December
@@ -44,8 +57,7 @@ for c in FEATURES:
         current[c] = current[c].fillna(df[c].mean())
 
 forecasts = current[
-    ["lganame", "wardname", "pop_under5", "fac_phc",
-     "fac_total", "flare_total_bcm_13yr"]
+    ["lganame", "wardname", "pop_under5", "fac_phc", "fac_total", "flare_total_bcm_13yr"]
 ].copy()
 
 TARGETS = ["no2_umol_m2", "rainfall_mm", "t2m_mean"]
@@ -77,30 +89,33 @@ forecasts["tier"] = forecasts.apply(tier, axis=1)
 
 mvp_payload = []
 for _, r in forecasts.iterrows():
-    mvp_payload.append({
-        "lganame": r["lganame"],
-        "wardname": r["wardname"],
-        "forecast_year": 2025, "forecast_month": 12,
-        "no2_forecast_umol_m2": (
-            float(r["no2_umol_m2_forecast"]) if not pd.isna(r["no2_umol_m2_forecast"]) else None
-        ),
-        "rainfall_forecast_mm": (
-            float(r["rainfall_mm_forecast"]) if not pd.isna(r["rainfall_mm_forecast"]) else None
-        ),
-        "t2m_forecast_c": (
-            float(r["t2m_mean_forecast"]) if not pd.isna(r["t2m_mean_forecast"]) else None
-        ),
-        "no2_climatology": (
-            float(r["no2_umol_m2_climatology"]) if not pd.isna(r["no2_umol_m2_climatology"]) else None
-        ),
-        "tier": r["tier"],
-        "model": "xgboost_v2_multiyear",
-        "n_obs": 91,
-    })
+    mvp_payload.append(
+        {
+            "lganame": r["lganame"],
+            "wardname": r["wardname"],
+            "forecast_year": 2025,
+            "forecast_month": 12,
+            "no2_forecast_umol_m2": (
+                float(r["no2_umol_m2_forecast"]) if not pd.isna(r["no2_umol_m2_forecast"]) else None
+            ),
+            "rainfall_forecast_mm": (
+                float(r["rainfall_mm_forecast"]) if not pd.isna(r["rainfall_mm_forecast"]) else None
+            ),
+            "t2m_forecast_c": (
+                float(r["t2m_mean_forecast"]) if not pd.isna(r["t2m_mean_forecast"]) else None
+            ),
+            "no2_climatology": (
+                float(r["no2_umol_m2_climatology"]) if not pd.isna(r["no2_umol_m2_climatology"]) else None
+            ),
+            "tier": r["tier"],
+            "model": "xgboost_v2_multiyear",
+            "n_obs": 91,
+        }
+    )
 
 (MVP / "forecast_dec_2025.json").write_text(json.dumps(mvp_payload, indent=2))
 print(f"Wrote {MVP / 'forecast_dec_2025.json'}: {len(mvp_payload)} wards")
-print(f"\nTier distribution:")
+print("\nTier distribution:")
 print(forecasts.tier.value_counts().to_string())
-print(f"\nLGA mean forecast NO2 (μmol/m²):")
-print(forecasts.groupby('lganame')['no2_umol_m2_forecast'].mean().round(2).to_string())
+print("\nLGA mean forecast NO2 (μmol/m²):")
+print(forecasts.groupby("lganame")["no2_umol_m2_forecast"].mean().round(2).to_string())

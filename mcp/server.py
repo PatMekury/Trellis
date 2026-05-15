@@ -20,39 +20,45 @@ Run:
 Or via stdio for client integration:
     python3 -m mcp.cli ./server.py
 """
+
 from __future__ import annotations
 
 import asyncio
 import json
 import os
 from pathlib import Path
+
+# Project root, resolved relative to this file (was a sandbox-absolute path).
+from pathlib import Path as _Path
 from typing import Any
 
 import httpx
 
-# Project root, resolved relative to this file (was a sandbox-absolute path).
-from pathlib import Path as _Path
 ROOT_DIR = _Path(__file__).resolve().parent.parent
 
 try:
-    from mcp.server import Server
-    from mcp.server.stdio import stdio_server
     import mcp.types as types
+    from mcp.server.stdio import stdio_server
+
+    from mcp.server import Server
 except ImportError:
     print("[trellis-mcp] mcp package not installed. Run: pip install mcp")
     raise SystemExit(1)
 
 BACKEND = os.getenv("TRELLIS_BACKEND_URL", "http://localhost:8001")
 SMS_API = os.getenv("TRELLIS_SMS_URL", "http://localhost:8000")
-FORECAST_FALLBACK = Path(os.getenv(
-    "TRELLIS_FORECAST_PATH",
-    str(ROOT_DIR / "mvp/forecast_may_2026.json"),
-))
+FORECAST_FALLBACK = Path(
+    os.getenv(
+        "TRELLIS_FORECAST_PATH",
+        str(ROOT_DIR / "mvp/forecast_may_2026.json"),
+    )
+)
 
 server = Server("trellis")
 
 
 # ============ HELPERS ============
+
 
 async def get_forecast() -> list[dict]:
     """Fetch the 4-week forecast from the backend, fall back to local JSON."""
@@ -69,14 +75,14 @@ async def get_forecast() -> list[dict]:
 
 async def get_ward_profiles() -> dict[str, dict]:
     """Read the ward time-series JSON to expose ward static profiles."""
-    p = Path(os.getenv("TRELLIS_WARD_TS_PATH",
-        str(ROOT_DIR / "dhis2/ward_timeseries.json")))
+    p = Path(os.getenv("TRELLIS_WARD_TS_PATH", str(ROOT_DIR / "dhis2/ward_timeseries.json")))
     if p.exists():
         return json.loads(p.read_text())
     return {}
 
 
 # ============ TOOLS ============
+
 
 @server.list_tools()
 async def list_tools() -> list[types.Tool]:
@@ -249,9 +255,13 @@ async def tool_forecast(args: dict) -> list[types.TextContent]:
     ward = args.get("wardname", "").strip()
     match = next((f for f in forecasts if f["lganame"] == lga and f["wardname"] == ward), None)
     if not match:
-        return [types.TextContent(type="text",
-            text=f"No forecast found for {lga} / {ward}. "
-                 f"Available LGAs: {sorted(set(f['lganame'] for f in forecasts))}")]
+        return [
+            types.TextContent(
+                type="text",
+                text=f"No forecast found for {lga} / {ward}. "
+                f"Available LGAs: {sorted(set(f['lganame'] for f in forecasts))}",
+            )
+        ]
     return [types.TextContent(type="text", text=json.dumps(match, indent=2))]
 
 
@@ -266,7 +276,8 @@ async def tool_ward_profile(args: dict) -> list[types.TextContent]:
     if not profile and not forecast:
         return [types.TextContent(type="text", text=f"No profile found for {lga} / {ward}.")]
     out = {
-        "lganame": lga, "wardname": ward,
+        "lganame": lga,
+        "wardname": ward,
         "population": {
             "total": profile.get("pop_total") if profile else None,
             "under_5": profile.get("pop_under5") if profile else None,
@@ -295,11 +306,19 @@ async def tool_alert_list(args: dict) -> list[types.TextContent]:
         rows = [f for f in forecasts if f["tier"] == tier]
     rows.sort(key=lambda r: r.get("no2_forecast_umol_m2") or 0, reverse=True)
     rows = rows[:limit]
-    return [types.TextContent(type="text", text=json.dumps({
-        "n_results": len(rows),
-        "tier_filter": tier,
-        "wards": rows,
-    }, indent=2))]
+    return [
+        types.TextContent(
+            type="text",
+            text=json.dumps(
+                {
+                    "n_results": len(rows),
+                    "tier_filter": tier,
+                    "wards": rows,
+                },
+                indent=2,
+            ),
+        )
+    ]
 
 
 async def tool_priority_score(args: dict) -> list[types.TextContent]:
@@ -315,18 +334,23 @@ async def tool_priority_score(args: dict) -> list[types.TextContent]:
     rows = []
     for key, p in profiles.items():
         f = fc_by_key.get(key, {})
-        rows.append({
-            "lganame": p["lga"], "wardname": p["ward"],
-            "pop_under5": p["pop_under5"],
-            "no2": (f.get("no2_forecast_umol_m2") or 0),
-            "flare_bcm": p["flare_bcm"],
-            "fac_phc": p["fac_phc"],
-        })
+        rows.append(
+            {
+                "lganame": p["lga"],
+                "wardname": p["ward"],
+                "pop_under5": p["pop_under5"],
+                "no2": (f.get("no2_forecast_umol_m2") or 0),
+                "flare_bcm": p["flare_bcm"],
+                "fac_phc": p["fac_phc"],
+            }
+        )
 
     def norm(values):
-        if not values: return []
+        if not values:
+            return []
         mn, mx = min(values), max(values)
-        if mx == mn: return [0] * len(values)
+        if mx == mn:
+            return [0] * len(values)
         return [(v - mn) / (mx - mn) for v in values]
 
     pops = norm([r["pop_under5"] for r in rows])
@@ -344,15 +368,15 @@ async def tool_priority_score(args: dict) -> list[types.TextContent]:
     w_child, w_no2, w_gap, w_flare = (x / total for x in (w_child, w_no2, w_gap, w_flare))
 
     for i, r in enumerate(rows):
-        r["score"] = round(
-            w_child * pops[i] + w_no2 * no2s[i] + w_flare * flares[i] + w_gap * gaps[i], 3
-        )
+        r["score"] = round(w_child * pops[i] + w_no2 * no2s[i] + w_flare * flares[i] + w_gap * gaps[i], 3)
 
     rows.sort(key=lambda r: r["score"], reverse=True)
     out = {
         "weights_used": {
-            "child": w_child, "no2": w_no2,
-            "coverage_gap": w_gap, "flare": w_flare,
+            "child": w_child,
+            "no2": w_no2,
+            "coverage_gap": w_gap,
+            "flare": w_flare,
         },
         "n_wards": len(rows),
         "top_25": rows[:25],
@@ -365,30 +389,52 @@ async def tool_send_advisory(args: dict) -> list[types.TextContent]:
     if channel == "sms":
         advisory_type = args.get("advisory_type", "general")
         if advisory_type not in ("general", "malaria", "respiratory"):
-            return [types.TextContent(type="text",
-                text=f"Invalid advisory_type '{advisory_type}'. Use general | malaria | respiratory.")]
+            return [
+                types.TextContent(
+                    type="text",
+                    text=f"Invalid advisory_type '{advisory_type}'. Use general | malaria | respiratory.",
+                )
+            ]
         try:
             async with httpx.AsyncClient(timeout=10) as c:
                 r = await c.post(f"{SMS_API}/dispatch", params={"channel": advisory_type})
                 r.raise_for_status()
-                return [types.TextContent(type="text",
-                    text=f"SMS dispatch result ({advisory_type} channel): {r.json()}")]
+                return [
+                    types.TextContent(
+                        type="text", text=f"SMS dispatch result ({advisory_type} channel): {r.json()}"
+                    )
+                ]
         except Exception as e:
-            return [types.TextContent(type="text",
-                text=f"SMS dispatch failed (is the SMS service running at {SMS_API}?): {e}")]
+            return [
+                types.TextContent(
+                    type="text", text=f"SMS dispatch failed (is the SMS service running at {SMS_API}?): {e}"
+                )
+            ]
     if channel == "dhis2":
-        return [types.TextContent(type="text",
-            text="DHIS2 dashboard refreshes automatically when the forecast file is updated by "
-                 "the Trellis pipeline. To force a manual refresh, replace mvp/forecast_may_2026.json "
-                 "with the latest output from model/forecast_may2026.py and run "
-                 "dhis2/local/push_to_dhis2.py if running against your local DHIS2.")]
+        return [
+            types.TextContent(
+                type="text",
+                text="DHIS2 dashboard refreshes automatically when the forecast file is updated by "
+                "the Trellis pipeline. To force a manual refresh, replace mvp/forecast_may_2026.json "
+                "with the latest output from model/forecast_may2026.py and run "
+                "dhis2/local/push_to_dhis2.py if running against your local DHIS2.",
+            )
+        ]
     if channel == "school":
-        return [types.TextContent(type="text",
-            text="School PWA fetches the forecast on every page open. The service worker caches "
-                 "for offline use. To push an update, ensure the forecast.json on the server has been refreshed.")]
+        return [
+            types.TextContent(
+                type="text",
+                text="School PWA fetches the forecast on every page open. The service worker caches "
+                "for offline use. To push an update, ensure the forecast.json on the server has been refreshed.",
+            )
+        ]
     if channel == "surge":
-        return [types.TextContent(type="text",
-            text="Surge UI is a polling client. To push an update, refresh the page or the underlying forecast.json.")]
+        return [
+            types.TextContent(
+                type="text",
+                text="Surge UI is a polling client. To push an update, refresh the page or the underlying forecast.json.",
+            )
+        ]
     return [types.TextContent(type="text", text=f"Unknown channel: {channel}")]
 
 
@@ -396,20 +442,23 @@ async def tool_malaria_risk(args: dict) -> list[types.TextContent]:
     """Return the malaria-risk classification for a given ward."""
     # Local import to keep module load fast even when malaria_risk isn't on path
     import sys
+
     sys.path.insert(0, str(ROOT_DIR / "model"))
     try:
         from malaria_risk import classify_malaria_risk, explain_classification
     except ImportError:
-        return [types.TextContent(type="text",
-            text="malaria_risk module not found. Expected at model/malaria_risk.py.")]
+        return [
+            types.TextContent(
+                type="text", text="malaria_risk module not found. Expected at model/malaria_risk.py."
+            )
+        ]
 
     forecasts = await get_forecast()
     lga = args.get("lganame", "").strip()
     ward = args.get("wardname", "").strip()
     f = next((x for x in forecasts if x["lganame"] == lga and x["wardname"] == ward), None)
     if not f:
-        return [types.TextContent(type="text",
-            text=f"No forecast found for {lga} / {ward}.")]
+        return [types.TextContent(type="text", text=f"No forecast found for {lga} / {ward}.")]
 
     rain = f.get("rainfall_forecast_mm")
     temp = f.get("t2m_forecast_c")
@@ -446,8 +495,7 @@ async def tool_respiratory_alert(args: dict) -> list[types.TextContent]:
 
     f = next((x for x in forecasts if x["lganame"] == lga and x["wardname"] == ward), None)
     if not f:
-        return [types.TextContent(type="text",
-            text=f"No forecast found for {lga} / {ward}.")]
+        return [types.TextContent(type="text", text=f"No forecast found for {lga} / {ward}.")]
 
     no2 = f.get("no2_forecast_umol_m2") or 0
     # Domain-wide 75th percentile flag (consistent with dashboard KPI)
@@ -467,8 +515,7 @@ async def tool_respiratory_alert(args: dict) -> list[types.TextContent]:
         )
         if age is not None and age <= 3:
             action_en = (
-                f"Toddler ({age} y): the under-5 lung is most vulnerable in this age band. "
-                + action_en
+                f"Toddler ({age} y): the under-5 lung is most vulnerable in this age band. " + action_en
             )
     else:
         action_en = "Air healthy for under-5s currently. Maintain routine."
@@ -496,6 +543,7 @@ async def tool_respiratory_alert(args: dict) -> list[types.TextContent]:
 
 
 # ============ ENTRY ============
+
 
 async def main():
     async with stdio_server() as (read, write):

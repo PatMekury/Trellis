@@ -11,15 +11,15 @@ Run locally:
   pip install fastapi uvicorn
   uvicorn app:app --reload --port 8000
 """
+
 from __future__ import annotations
 
 import json
 import os
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,6 +33,7 @@ PROVIDER_NAME = os.getenv("TRELLIS_SMS_PROVIDER", "mock")  # "mock" | "africas_t
 
 
 # ============ DATABASE ============
+
 
 def init_db():
     with conn() as c:
@@ -84,6 +85,7 @@ def conn():
 
 # ============ FORECAST ============
 
+
 def load_forecast():
     if not FORECAST_PATH.exists():
         return []
@@ -91,6 +93,7 @@ def load_forecast():
 
 
 # ============ SMS PROVIDERS ============
+
 
 class SmsProvider:
     name = "base"
@@ -101,6 +104,7 @@ class SmsProvider:
 
 class MockProvider(SmsProvider):
     """Logs to console; doesn't actually send. Useful for development."""
+
     name = "mock"
 
     def send(self, phone: str, message: str) -> dict:
@@ -114,19 +118,22 @@ class AfricasTalkingProvider(SmsProvider):
     Requires env vars TRELLIS_AT_USERNAME and TRELLIS_AT_API_KEY.
     Uses sandbox by default; set TRELLIS_AT_LIVE=1 for production.
     """
+
     name = "africas_talking"
 
     def send(self, phone: str, message: str) -> dict:
         try:
             import africastalking
         except ImportError:
-            return {"status": "error", "provider": "africas_talking",
-                    "error": "africastalking package not installed; pip install africastalking"}
+            return {
+                "status": "error",
+                "provider": "africas_talking",
+                "error": "africastalking package not installed; pip install africastalking",
+            }
         username = os.getenv("TRELLIS_AT_USERNAME", "sandbox")
         api_key = os.getenv("TRELLIS_AT_API_KEY", "")
         if not api_key:
-            return {"status": "error", "provider": "africas_talking",
-                    "error": "TRELLIS_AT_API_KEY not set"}
+            return {"status": "error", "provider": "africas_talking", "error": "TRELLIS_AT_API_KEY not set"}
         africastalking.initialize(username, api_key)
         sms = africastalking.SMS
         try:
@@ -138,20 +145,27 @@ class AfricasTalkingProvider(SmsProvider):
 
 class TwilioProvider(SmsProvider):
     """Twilio — used as a fallback or for testing outside Nigeria."""
+
     name = "twilio"
 
     def send(self, phone: str, message: str) -> dict:
         try:
             from twilio.rest import Client
         except ImportError:
-            return {"status": "error", "provider": "twilio",
-                    "error": "twilio package not installed; pip install twilio"}
+            return {
+                "status": "error",
+                "provider": "twilio",
+                "error": "twilio package not installed; pip install twilio",
+            }
         account_sid = os.getenv("TRELLIS_TWILIO_SID", "")
         auth_token = os.getenv("TRELLIS_TWILIO_TOKEN", "")
         from_num = os.getenv("TRELLIS_TWILIO_FROM", "")
         if not all([account_sid, auth_token, from_num]):
-            return {"status": "error", "provider": "twilio",
-                    "error": "TRELLIS_TWILIO_{SID,TOKEN,FROM} env vars must be set"}
+            return {
+                "status": "error",
+                "provider": "twilio",
+                "error": "TRELLIS_TWILIO_{SID,TOKEN,FROM} env vars must be set",
+            }
         try:
             c = Client(account_sid, auth_token)
             m = c.messages.create(body=message, from_=from_num, to=phone)
@@ -176,81 +190,110 @@ def provider() -> SmsProvider:
 #
 # Each renderer emits English (default) or Nigerian Pidgin ("pcm") versions.
 
+
 def render(tier: str, ward: str, lang: str = "en") -> str:
     if lang == "pcm":  # Nigerian Pidgin
         if tier == "likely":
-            return (f"TRELLIS WARN: {ward}. Air bad small-small for next 4 weeks. "
-                    f"Make small pikin no dey play outside between 11am-3pm. "
-                    f"If pikin dey cough or breath fast, take am go health centre quick. Free advice: 1234.")
+            return (
+                f"TRELLIS WARN: {ward}. Air bad small-small for next 4 weeks. "
+                f"Make small pikin no dey play outside between 11am-3pm. "
+                f"If pikin dey cough or breath fast, take am go health centre quick. Free advice: 1234."
+            )
         if tier == "possible":
-            return (f"TRELLIS NOTICE: {ward}. Air go fit be bad next 4 weeks. "
-                    f"Pikin wey get asthma make e carry inhaler. Open window for morning. Free advice: 1234.")
-        return (f"TRELLIS UPDATE: {ward}. Air dey okay for now. We go message you again if e change. Free: 1234.")
+            return (
+                f"TRELLIS NOTICE: {ward}. Air go fit be bad next 4 weeks. "
+                f"Pikin wey get asthma make e carry inhaler. Open window for morning. Free advice: 1234."
+            )
+        return (
+            f"TRELLIS UPDATE: {ward}. Air dey okay for now. We go message you again if e change. Free: 1234."
+        )
     # English (default)
     if tier == "likely":
-        return (f"TRELLIS ALERT: {ward}. Air quality LIKELY to be poor next 2-4 weeks. "
-                f"Keep small children indoors mid-day. Watch for cough or fast breathing. "
-                f"Visit PHC if breathing fast. Free advice line: 1234.")
+        return (
+            f"TRELLIS ALERT: {ward}. Air quality LIKELY to be poor next 2-4 weeks. "
+            f"Keep small children indoors mid-day. Watch for cough or fast breathing. "
+            f"Visit PHC if breathing fast. Free advice line: 1234."
+        )
     if tier == "possible":
-        return (f"TRELLIS NOTICE: {ward}. POSSIBLE poor air next 2-4 weeks. "
-                f"Children with asthma carry inhaler. Open windows morning, close noon. Free advice: 1234.")
-    return (f"TRELLIS UPDATE: {ward}. Air WATCH this week. No immediate action. "
-            f"Trellis will message if conditions change. Free advice: 1234.")
+        return (
+            f"TRELLIS NOTICE: {ward}. POSSIBLE poor air next 2-4 weeks. "
+            f"Children with asthma carry inhaler. Open windows morning, close noon. Free advice: 1234."
+        )
+    return (
+        f"TRELLIS UPDATE: {ward}. Air WATCH this week. No immediate action. "
+        f"Trellis will message if conditions change. Free advice: 1234."
+    )
 
 
 def render_malaria(tier: str, ward: str, lang: str = "en") -> str:
     """Malaria-risk advisory: rainfall + temperature thresholds, EPIDEMIA-aligned."""
     if lang == "pcm":
         if tier == "likely":
-            return (f"TRELLIS MALARIA WARN: {ward}. Mosquito breeding fit high next 4 weeks. "
-                    f"Sleep under net every night. If pikin get fever, go health centre to test. "
-                    f"Don't keep stagnant water near house. Free advice: 1234.")
+            return (
+                f"TRELLIS MALARIA WARN: {ward}. Mosquito breeding fit high next 4 weeks. "
+                f"Sleep under net every night. If pikin get fever, go health centre to test. "
+                f"Don't keep stagnant water near house. Free advice: 1234."
+            )
         if tier == "possible":
-            return (f"TRELLIS MALARIA NOTICE: {ward}. Conditions fit support mosquito small-small. "
-                    f"Use net for pikin. Cover water containers. Test for malaria if fever pass two days. Free: 1234.")
-        return (f"TRELLIS MALARIA UPDATE: {ward}. Risk low now. Keep using net. Free advice: 1234.")
+            return (
+                f"TRELLIS MALARIA NOTICE: {ward}. Conditions fit support mosquito small-small. "
+                f"Use net for pikin. Cover water containers. Test for malaria if fever pass two days. Free: 1234."
+            )
+        return f"TRELLIS MALARIA UPDATE: {ward}. Risk low now. Keep using net. Free advice: 1234."
     # English
     if tier == "likely":
-        return (f"TRELLIS MALARIA ALERT: {ward}. Environmental conditions LIKELY for mosquito breeding next 2-4 weeks. "
-                f"Use ITN every night. If your child has fever, go to PHC for malaria test. "
-                f"Empty containers that hold water. Free advice line: 1234.")
+        return (
+            f"TRELLIS MALARIA ALERT: {ward}. Environmental conditions LIKELY for mosquito breeding next 2-4 weeks. "
+            f"Use ITN every night. If your child has fever, go to PHC for malaria test. "
+            f"Empty containers that hold water. Free advice line: 1234."
+        )
     if tier == "possible":
-        return (f"TRELLIS MALARIA NOTICE: {ward}. Conditions POSSIBLY support mosquito breeding next 2-4 weeks. "
-                f"Sleep under ITN. Cover water containers. Test for malaria if fever lasts 2 days. Free: 1234.")
-    return (f"TRELLIS MALARIA UPDATE: {ward}. Risk currently low. Maintain ITN use. Free advice: 1234.")
+        return (
+            f"TRELLIS MALARIA NOTICE: {ward}. Conditions POSSIBLY support mosquito breeding next 2-4 weeks. "
+            f"Sleep under ITN. Cover water containers. Test for malaria if fever lasts 2 days. Free: 1234."
+        )
+    return f"TRELLIS MALARIA UPDATE: {ward}. Risk currently low. Maintain ITN use. Free advice: 1234."
 
 
-def render_respiratory(tier: str, ward: str, lang: str = "en", child_age_years: Optional[int] = None) -> str:
+def render_respiratory(tier: str, ward: str, lang: str = "en", child_age_years: int | None = None) -> str:
     """Paediatric respiratory advisory targeted at caregivers of toddlers / under-5s.
 
     Rooted in the toddler-asthma framing: high-NO2 days require keeping young
     children's exposure low and managing diagnosed asthma proactively.
     """
-    is_toddler = (child_age_years is not None and child_age_years <= 3)
+    is_toddler = child_age_years is not None and child_age_years <= 3
     age_phrase_en = "toddler" if is_toddler else "child"
     age_phrase_pcm = "small pikin" if is_toddler else "pikin"
 
     if lang == "pcm":
         if tier == "likely":
-            return (f"TRELLIS LUNGS WARN: {ward}. Air for around get high NO2. "
-                    f"Make {age_phrase_pcm} no go outside for noon time. "
-                    f"If pikin dey wheeze or breath fast, follow asthma plan, give blue inhaler. "
-                    f"Go health centre quick if breath no come back normal. Free advice: 1234.")
+            return (
+                f"TRELLIS LUNGS WARN: {ward}. Air for around get high NO2. "
+                f"Make {age_phrase_pcm} no go outside for noon time. "
+                f"If pikin dey wheeze or breath fast, follow asthma plan, give blue inhaler. "
+                f"Go health centre quick if breath no come back normal. Free advice: 1234."
+            )
         if tier == "possible":
-            return (f"TRELLIS LUNGS NOTICE: {ward}. Air fit no good for pikin lungs next 2-4 weeks. "
-                    f"Pikin wey dey use inhaler make e carry am. Open window for morning, close for afternoon. Free: 1234.")
-        return (f"TRELLIS LUNGS UPDATE: {ward}. Air dey okay for pikin. Free advice: 1234.")
+            return (
+                f"TRELLIS LUNGS NOTICE: {ward}. Air fit no good for pikin lungs next 2-4 weeks. "
+                f"Pikin wey dey use inhaler make e carry am. Open window for morning, close for afternoon. Free: 1234."
+            )
+        return f"TRELLIS LUNGS UPDATE: {ward}. Air dey okay for pikin. Free advice: 1234."
     # English
     if tier == "likely":
-        return (f"TRELLIS RESPIRATORY ALERT: {ward}. Forecast NO2 LIKELY elevated for under-5s next 2-4 weeks. "
-                f"Keep your {age_phrase_en} indoors during midday (11am-3pm). "
-                f"If your child has diagnosed asthma, follow their action plan; have reliever inhaler ready. "
-                f"Visit PHC immediately if wheeze or fast breathing does not settle. Free advice: 1234.")
+        return (
+            f"TRELLIS RESPIRATORY ALERT: {ward}. Forecast NO2 LIKELY elevated for under-5s next 2-4 weeks. "
+            f"Keep your {age_phrase_en} indoors during midday (11am-3pm). "
+            f"If your child has diagnosed asthma, follow their action plan; have reliever inhaler ready. "
+            f"Visit PHC immediately if wheeze or fast breathing does not settle. Free advice: 1234."
+        )
         # Small note: the toddler-asthma framing is most acute below age 3.
     if tier == "possible":
-        return (f"TRELLIS RESPIRATORY NOTICE: {ward}. Air may be unhealthy for under-5s next 2-4 weeks. "
-                f"If your {age_phrase_en} uses an inhaler, carry it. Open windows in cool morning, close midday. Free: 1234.")
-    return (f"TRELLIS RESPIRATORY UPDATE: {ward}. Air healthy for under-5s currently. Free advice: 1234.")
+        return (
+            f"TRELLIS RESPIRATORY NOTICE: {ward}. Air may be unhealthy for under-5s next 2-4 weeks. "
+            f"If your {age_phrase_en} uses an inhaler, carry it. Open windows in cool morning, close midday. Free: 1234."
+        )
+    return f"TRELLIS RESPIRATORY UPDATE: {ward}. Air healthy for under-5s currently. Free advice: 1234."
 
 
 # ============ FASTAPI ============
@@ -266,11 +309,12 @@ def _startup():
 
 # ----- Models -----
 
+
 class EnrollmentIn(BaseModel):
     phone: str = Field(..., description="E.164 format phone number, e.g. +2348012345678")
     lganame: str
     wardname: str
-    child_age_years: Optional[int] = None
+    child_age_years: int | None = None
     lang: str = Field("en", pattern=r"^(en|pcm)$")
 
 
@@ -287,7 +331,7 @@ class AuditEntry(BaseModel):
     tier: str
     message: str
     provider: str
-    provider_response: Optional[str]
+    provider_response: str | None
     sent_at: str
     forecast_year: int
     forecast_month: int
@@ -301,6 +345,7 @@ class DispatchResult(BaseModel):
 
 
 # ----- Endpoints -----
+
 
 @app.get("/")
 def root():
@@ -333,13 +378,15 @@ def enroll(e: EnrollmentIn):
 
 
 @app.get("/enrollments")
-def list_enrollments(lganame: Optional[str] = None, wardname: Optional[str] = None):
+def list_enrollments(lganame: str | None = None, wardname: str | None = None):
     sql = "SELECT * FROM enrollments WHERE 1=1"
     args = []
     if lganame:
-        sql += " AND lganame = ?"; args.append(lganame)
+        sql += " AND lganame = ?"
+        args.append(lganame)
     if wardname:
-        sql += " AND wardname = ?"; args.append(wardname)
+        sql += " AND wardname = ?"
+        args.append(wardname)
     with conn() as c:
         rows = [dict(r) for r in c.execute(sql, args).fetchall()]
     return rows
@@ -373,11 +420,13 @@ def dispatch(
     tier_field = {"general": "tier", "malaria": "malaria_risk_tier", "respiratory": "tier"}[channel]
 
     with conn() as c:
-        last_tiers = {(r["lganame"], r["wardname"]): r["tier"]
-                      for r in c.execute(
-                          "SELECT * FROM last_tier WHERE channel = ? OR channel IS NULL",
-                          (channel,),
-                      ).fetchall()}
+        last_tiers = {
+            (r["lganame"], r["wardname"]): r["tier"]
+            for r in c.execute(
+                "SELECT * FROM last_tier WHERE channel = ? OR channel IS NULL",
+                (channel,),
+            ).fetchall()
+        }
         enrolls = c.execute("SELECT * FROM enrollments").fetchall()
 
         for e in enrolls:
@@ -411,15 +460,25 @@ def dispatch(
             c.execute(
                 "INSERT INTO audit (phone, lganame, wardname, tier, message, provider, "
                 "provider_response, forecast_year, forecast_month) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (e["phone"], e["lganame"], e["wardname"], tier, msg, provider().name,
-                 json.dumps(res), f.get("forecast_year"), f.get("forecast_month")),
+                (
+                    e["phone"],
+                    e["lganame"],
+                    e["wardname"],
+                    tier,
+                    msg,
+                    provider().name,
+                    json.dumps(res),
+                    f.get("forecast_year"),
+                    f.get("forecast_month"),
+                ),
             )
             if ok:
                 sent += 1
             else:
                 failed += 1
-            details.append({"phone": e["phone"], "ward": e["wardname"], "tier": tier,
-                            "ok": ok, "msg_len": len(msg)})
+            details.append(
+                {"phone": e["phone"], "ward": e["wardname"], "tier": tier, "ok": ok, "msg_len": len(msg)}
+            )
 
         # Update last_tier for every ward we have a forecast for, on the
         # channel we just dispatched. Other channels keep their own state.
@@ -427,8 +486,13 @@ def dispatch(
             c.execute(
                 "INSERT OR REPLACE INTO last_tier (lganame, wardname, tier, channel, updated_at) "
                 "VALUES (?, ?, ?, ?, ?)",
-                (f["lganame"], f["wardname"], f.get(tier_field, "watch"), channel,
-                 datetime.now(timezone.utc).isoformat()),
+                (
+                    f["lganame"],
+                    f["wardname"],
+                    f.get(tier_field, "watch"),
+                    channel,
+                    datetime.now(UTC).isoformat(),
+                ),
             )
 
     return DispatchResult(sent=sent, skipped=skipped, failed=failed, details=details)
@@ -437,9 +501,7 @@ def dispatch(
 @app.get("/audit")
 def list_audit(limit: int = 100):
     with conn() as c:
-        rows = c.execute(
-            "SELECT * FROM audit ORDER BY sent_at DESC LIMIT ?", (limit,)
-        ).fetchall()
+        rows = c.execute("SELECT * FROM audit ORDER BY sent_at DESC LIMIT ?", (limit,)).fetchall()
     return [dict(r) for r in rows]
 
 

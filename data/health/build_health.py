@@ -1,17 +1,17 @@
-
 # Project root, resolved relative to this file (was a sandbox-absolute path).
 from pathlib import Path as _Path
+
 ROOT_DIR = _Path(__file__).resolve().parent.parent.parent
 """Build Trellis health-facility and LGA layers from GRID3 v2.0."""
 from __future__ import annotations
+
 import shutil
 from pathlib import Path
 
 import geopandas as gpd
-import pandas as pd
 
-HERE = (ROOT_DIR / "data/health")
-GPKG = (ROOT_DIR / "data/trellis_delta_wards.gpkg")
+HERE = ROOT_DIR / "data/health"
+GPKG = ROOT_DIR / "data/trellis_delta_wards.gpkg"
 TMP_GPKG = "/tmp/trellis_delta_wards.gpkg"
 
 
@@ -34,9 +34,12 @@ def main():
     # Per-ward facility counts via spatial join to delta_wards
     wards = gpd.read_file(TMP_GPKG, layer="delta_wards").to_crs("EPSG:4326")
     hf_in_ward = gpd.sjoin(
-        hf, wards[["wardname","lganame","geometry"]],
-        how="left", predicate="within",
-        lsuffix="hf", rsuffix="ward",
+        hf,
+        wards[["wardname", "lganame", "geometry"]],
+        how="left",
+        predicate="within",
+        lsuffix="hf",
+        rsuffix="ward",
     )
 
     # Use the ward-from-spatial-join, falling back to GRID3-attributed ward when join misses
@@ -45,30 +48,42 @@ def main():
     matched = hf_in_ward["wardname_ward"].notna().sum()
     print(f"  facilities matched to a ward polygon: {matched}/{len(hf_in_ward)}")
 
-    summary = hf_in_ward.groupby(["lganame_final","wardname_final"]).agg(
-        n_facilities=("facility_name", "size"),
-        n_phc=("facility_level", lambda s: (s.str.contains("Primary", case=False, na=False)).sum()),
-        n_secondary=("facility_level", lambda s: (s.str.contains("Secondary", case=False, na=False)).sum()),
-        n_tertiary=("facility_level", lambda s: (s.str.contains("Tertiary", case=False, na=False)).sum()),
-        n_public=("ownership", lambda s: (s.str.lower() == "public").sum()),
-        n_private=("ownership", lambda s: (s.str.lower() == "private").sum()),
-    ).reset_index().rename(columns={"lganame_final":"lganame","wardname_final":"wardname"})
+    summary = (
+        hf_in_ward.groupby(["lganame_final", "wardname_final"])
+        .agg(
+            n_facilities=("facility_name", "size"),
+            n_phc=("facility_level", lambda s: (s.str.contains("Primary", case=False, na=False)).sum()),
+            n_secondary=(
+                "facility_level",
+                lambda s: (s.str.contains("Secondary", case=False, na=False)).sum(),
+            ),
+            n_tertiary=("facility_level", lambda s: (s.str.contains("Tertiary", case=False, na=False)).sum()),
+            n_public=("ownership", lambda s: (s.str.lower() == "public").sum()),
+            n_private=("ownership", lambda s: (s.str.lower() == "private").sum()),
+        )
+        .reset_index()
+        .rename(columns={"lganame_final": "lganame", "wardname_final": "wardname"})
+    )
 
     pilot = gpd.read_file(TMP_GPKG, layer="pilot_wards")
-    pilot_summary = pilot.merge(summary, on=["lganame","wardname"], how="left")
-    for c in ("n_facilities","n_phc","n_secondary","n_tertiary","n_public","n_private"):
+    pilot_summary = pilot.merge(summary, on=["lganame", "wardname"], how="left")
+    for c in ("n_facilities", "n_phc", "n_secondary", "n_tertiary", "n_public", "n_private"):
         pilot_summary[c] = pilot_summary[c].fillna(0).astype(int)
 
-    print(f"\nPilot wards with at least one facility: {(pilot_summary.n_facilities > 0).sum()} / {len(pilot_summary)}")
-    no_fac = pilot_summary[pilot_summary.n_facilities == 0][["lganame","wardname"]]
+    print(
+        f"\nPilot wards with at least one facility: {(pilot_summary.n_facilities > 0).sum()} / {len(pilot_summary)}"
+    )
+    no_fac = pilot_summary[pilot_summary.n_facilities == 0][["lganame", "wardname"]]
     if len(no_fac):
         print(f"\nPilot wards with ZERO facilities ({len(no_fac)}):")
         print(no_fac.to_string(index=False))
 
-    print(f"\nPilot wards by facility count, top 5:")
-    print(pilot_summary.nlargest(5, "n_facilities")[
-        ["lganame","wardname","n_facilities","n_phc","n_public","n_private"]
-    ].to_string(index=False))
+    print("\nPilot wards by facility count, top 5:")
+    print(
+        pilot_summary.nlargest(5, "n_facilities")[
+            ["lganame", "wardname", "n_facilities", "n_phc", "n_public", "n_private"]
+        ].to_string(index=False)
+    )
 
     # Write outputs
     summary.to_csv(HERE / "delta_ward_facility_summary.csv", index=False)
@@ -83,7 +98,7 @@ def main():
 
     # Append layers to main GeoPackage
     lgas.to_file(TMP_GPKG, layer="delta_lgas", driver="GPKG")
-    hf_clean = hf.drop(columns=["index_hf","index_ward"], errors="ignore")
+    hf_clean = hf.drop(columns=["index_hf", "index_ward"], errors="ignore")
     hf_clean.to_file(TMP_GPKG, layer="delta_health_facilities", driver="GPKG")
     pilot_summary.to_file(TMP_GPKG, layer="ward_facility_summary", driver="GPKG")
     shutil.copy2(TMP_GPKG, GPKG)

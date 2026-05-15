@@ -10,19 +10,25 @@ Hierarchy:
 DHIS2 UIDs must be 11 chars, alphanumeric, start with a letter. We generate deterministic
 UIDs from a SHA-1 of the org-unit canonical name, base62-encoded, padded.
 """
-import json, hashlib, string
-from pathlib import Path
-import geopandas as gpd
+
+import hashlib
+import json
+import string
 
 # Project root, resolved relative to this file (was a sandbox-absolute path).
 from pathlib import Path as _Path
+
+import geopandas as gpd
+
 ROOT_DIR = _Path(__file__).resolve().parent.parent.parent
 
-DATA = (ROOT_DIR / "data")
-OUT_DIR = (ROOT_DIR / "dhis2/local")
+DATA = ROOT_DIR / "data"
+OUT_DIR = ROOT_DIR / "dhis2/local"
 TMP_GPKG = "/tmp/trellis_delta_wards.gpkg"
 
 ALPHABET = string.ascii_letters + string.digits  # 62 chars
+
+
 def gen_uid(seed):
     """Deterministic 11-char UID, starts with a letter, alphanumeric."""
     h = hashlib.sha1(seed.encode()).digest()
@@ -36,6 +42,7 @@ def gen_uid(seed):
         n //= 62
     return "".join(chars)
 
+
 # Load
 delta_wards = gpd.read_file(TMP_GPKG, layer="delta_wards")
 delta_lgas = gpd.read_file(TMP_GPKG, layer="delta_lgas")
@@ -46,30 +53,45 @@ uid_lookup = {}
 
 # Nigeria root
 ng_uid = gen_uid("Nigeria")
-org_units.append({
-    "id": ng_uid, "name": "Nigeria", "shortName": "Nigeria",
-    "level": 1, "openingDate": "1900-01-01",
-})
+org_units.append(
+    {
+        "id": ng_uid,
+        "name": "Nigeria",
+        "shortName": "Nigeria",
+        "level": 1,
+        "openingDate": "1900-01-01",
+    }
+)
 uid_lookup["Nigeria"] = ng_uid
 
 # Delta State
 delta_uid = gen_uid("Nigeria/Delta")
-org_units.append({
-    "id": delta_uid, "name": "Delta State", "shortName": "Delta",
-    "level": 2, "parent": {"id": ng_uid},
-    "openingDate": "1991-08-27",
-})
+org_units.append(
+    {
+        "id": delta_uid,
+        "name": "Delta State",
+        "shortName": "Delta",
+        "level": 2,
+        "parent": {"id": ng_uid},
+        "openingDate": "1991-08-27",
+    }
+)
 uid_lookup["Delta State"] = delta_uid
 
 # LGAs (level 3)
 for _, r in delta_lgas.iterrows():
     lga_name = r["lganame"]
     uid = gen_uid(f"Nigeria/Delta/{lga_name}")
-    org_units.append({
-        "id": uid, "name": lga_name, "shortName": lga_name[:50],
-        "level": 3, "parent": {"id": delta_uid},
-        "openingDate": "1991-08-27",
-    })
+    org_units.append(
+        {
+            "id": uid,
+            "name": lga_name,
+            "shortName": lga_name[:50],
+            "level": 3,
+            "parent": {"id": delta_uid},
+            "openingDate": "1991-08-27",
+        }
+    )
     uid_lookup[f"LGA|{lga_name}"] = uid
 
 # Wards (level 4)
@@ -81,11 +103,16 @@ for _, r in delta_wards.iterrows():
         print(f"  WARN: no LGA UID for {lga_name}")
         continue
     uid = gen_uid(f"Nigeria/Delta/{lga_name}/{ward_name}")
-    org_units.append({
-        "id": uid, "name": ward_name, "shortName": ward_name[:50],
-        "level": 4, "parent": {"id": parent_uid},
-        "openingDate": "1991-08-27",
-    })
+    org_units.append(
+        {
+            "id": uid,
+            "name": ward_name,
+            "shortName": ward_name[:50],
+            "level": 4,
+            "parent": {"id": parent_uid},
+            "openingDate": "1991-08-27",
+        }
+    )
     uid_lookup[f"Ward|{lga_name}|{ward_name}"] = uid
 
 # UID uniqueness check
@@ -102,7 +129,7 @@ for o in org_units:
 print(f"Total org units: {len(org_units)}")
 print(f"  level 1: 1, level 2: 1, level 3: {len(delta_lgas)}, level 4: {len(delta_wards)}")
 print(f"All UIDs unique: {len(uids) == len(set(uids))}")
-print(f"All parent refs valid: yes")
+print("All parent refs valid: yes")
 
 with open(OUT_DIR / "nigeria_orgunits.json", "w") as f:
     json.dump({"organisationUnits": org_units}, f, indent=2)

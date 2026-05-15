@@ -15,39 +15,37 @@ Run without Docker (requires existing Postgres at DATABASE_URL):
   pip install -r requirements.txt
   uvicorn app:app --reload --port 8001
 """
+
 from __future__ import annotations
 
 import hashlib
 import hmac
 import json
 import os
-import time
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional
-
-from fastapi import FastAPI, HTTPException, Header, Query, Request
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
-
-import asyncpg
 
 # Project root, resolved relative to this file (was a sandbox-absolute path).
 from pathlib import Path as _Path
+
+import asyncpg
+from fastapi import FastAPI, Header, HTTPException, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+
 ROOT_DIR = _Path(__file__).resolve().parent.parent
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://trellis:trellis@localhost:5432/trellis",
 )
-FORECAST_PATH = Path(os.getenv("FORECAST_PATH",
-    str(ROOT_DIR / "mvp/forecast_may_2026.json")))
+FORECAST_PATH = Path(os.getenv("FORECAST_PATH", str(ROOT_DIR / "mvp/forecast_may_2026.json")))
 
 
 # ============ DATABASE ============
 
-POOL: Optional[asyncpg.Pool] = None
+POOL: asyncpg.Pool | None = None
 
 
 SCHEMA_SQL = """
@@ -119,14 +117,15 @@ async def lifespan(app: FastAPI):
 
 # ============ MODELS ============
 
+
 class ReadingIn(BaseModel):
     observed_at: datetime
-    pm25_raw: Optional[float] = None
-    pm10_raw: Optional[float] = None
-    no2_raw: Optional[float] = None
-    temperature_c: Optional[float] = None
-    humidity_pct: Optional[float] = None
-    pressure_hpa: Optional[float] = None
+    pm25_raw: float | None = None
+    pm10_raw: float | None = None
+    no2_raw: float | None = None
+    temperature_c: float | None = None
+    humidity_pct: float | None = None
+    pressure_hpa: float | None = None
 
 
 class IngestIn(BaseModel):
@@ -137,8 +136,8 @@ class IngestIn(BaseModel):
 class SensorEnrollIn(BaseModel):
     sensor_id: str
     channel: str = Field(..., pattern=r"^(PHC|school|community)$")
-    lganame: Optional[str] = None
-    wardname: Optional[str] = None
+    lganame: str | None = None
+    wardname: str | None = None
     latitude: float
     longitude: float
     secret: str  # plaintext secret; we store sha256 hash only
@@ -151,15 +150,16 @@ class SensorEnrollIn(BaseModel):
 class SensorOut(BaseModel):
     id: str
     channel: str
-    lganame: Optional[str]
-    wardname: Optional[str]
+    lganame: str | None
+    wardname: str | None
     latitude: float
     longitude: float
     enrolled_at: datetime
-    last_seen: Optional[datetime]
+    last_seen: datetime | None
 
 
 # ============ AUTH ============
+
 
 def hash_secret(secret: str) -> str:
     return hashlib.sha256(secret.encode()).hexdigest()
@@ -187,6 +187,7 @@ async def root():
 
 # ----- Sensor registry -----
 
+
 @app.post("/sensors", response_model=SensorOut)
 async def enroll_sensor(s: SensorEnrollIn):
     """Register a new sensor with its per-device secret. Idempotent."""
@@ -196,7 +197,8 @@ async def enroll_sensor(s: SensorEnrollIn):
             row = await conn.fetchrow(
                 "SELECT lganame, wardname FROM ward_polygons "
                 "WHERE ST_Contains(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326)) LIMIT 1",
-                s.longitude, s.latitude,
+                s.longitude,
+                s.latitude,
             )
             if row:
                 s.lganame = s.lganame or row["lganame"]
@@ -216,19 +218,30 @@ async def enroll_sensor(s: SensorEnrollIn):
                 cal_pm25_a=EXCLUDED.cal_pm25_a, cal_pm25_b=EXCLUDED.cal_pm25_b,
                 cal_no2_a=EXCLUDED.cal_no2_a, cal_no2_b=EXCLUDED.cal_no2_b
             """,
-            s.sensor_id, s.channel, s.lganame, s.wardname, s.latitude, s.longitude,
-            secret_hash, s.cal_pm25_a, s.cal_pm25_b, s.cal_no2_a, s.cal_no2_b,
+            s.sensor_id,
+            s.channel,
+            s.lganame,
+            s.wardname,
+            s.latitude,
+            s.longitude,
+            secret_hash,
+            s.cal_pm25_a,
+            s.cal_pm25_b,
+            s.cal_no2_a,
+            s.cal_no2_b,
         )
         # Store plaintext secret in the dedicated sensor_secrets table so HMAC
         # verification at /ingest can run hmac.compare_digest properly.
         await conn.execute(
             "INSERT INTO sensor_secrets (sensor_id, secret) VALUES ($1, $2) "
             "ON CONFLICT (sensor_id) DO UPDATE SET secret = EXCLUDED.secret",
-            s.sensor_id, s.secret,
+            s.sensor_id,
+            s.secret,
         )
         row = await conn.fetchrow(
             "SELECT id, channel, lganame, wardname, latitude, longitude, enrolled_at, last_seen "
-            "FROM sensors WHERE id = $1", s.sensor_id,
+            "FROM sensors WHERE id = $1",
+            s.sensor_id,
         )
     return SensorOut(**dict(row))
 
@@ -245,6 +258,7 @@ async def list_sensors():
 
 # ----- Ingest -----
 
+
 @app.post("/ingest")
 async def ingest(
     payload: IngestIn,
@@ -259,8 +273,8 @@ async def ingest(
     raw_body = await request.body()
     async with POOL.acquire() as conn:
         s = await conn.fetchrow(
-            "SELECT cal_pm25_a, cal_pm25_b, cal_no2_a, cal_no2_b "
-            "FROM sensors WHERE id = $1", payload.sensor_id,
+            "SELECT cal_pm25_a, cal_pm25_b, cal_no2_a, cal_no2_b FROM sensors WHERE id = $1",
+            payload.sensor_id,
         )
         if not s:
             raise HTTPException(404, f"unknown sensor {payload.sensor_id}")
@@ -283,10 +297,20 @@ async def ingest(
         for r in payload.readings:
             pm25_cal = (s["cal_pm25_a"] * r.pm25_raw + s["cal_pm25_b"]) if r.pm25_raw is not None else None
             no2_cal = (s["cal_no2_a"] * r.no2_raw + s["cal_no2_b"]) if r.no2_raw is not None else None
-            rows.append((
-                payload.sensor_id, r.observed_at, r.pm25_raw, pm25_cal, r.pm10_raw,
-                r.no2_raw, no2_cal, r.temperature_c, r.humidity_pct, r.pressure_hpa,
-            ))
+            rows.append(
+                (
+                    payload.sensor_id,
+                    r.observed_at,
+                    r.pm25_raw,
+                    pm25_cal,
+                    r.pm10_raw,
+                    r.no2_raw,
+                    no2_cal,
+                    r.temperature_c,
+                    r.humidity_pct,
+                    r.pressure_hpa,
+                )
+            )
         await conn.executemany(
             "INSERT INTO readings (sensor_id, observed_at, pm25_raw, pm25, pm10_raw, "
             "no2_raw, no2, temperature_c, humidity_pct, pressure_hpa) "
@@ -295,29 +319,35 @@ async def ingest(
         )
         await conn.execute(
             "UPDATE sensors SET last_seen = $1 WHERE id = $2",
-            datetime.now(timezone.utc), payload.sensor_id,
+            datetime.now(UTC),
+            payload.sensor_id,
         )
     return {"ingested": len(payload.readings), "sensor_id": payload.sensor_id}
 
 
 # ----- Query -----
 
+
 @app.get("/sensors/{sensor_id}/readings")
 async def list_readings(
     sensor_id: str,
-    since: Optional[datetime] = None,
+    since: datetime | None = None,
     limit: int = Query(500, le=2000),
 ):
     async with POOL.acquire() as conn:
         if since:
             rows = await conn.fetch(
                 "SELECT * FROM readings WHERE sensor_id = $1 AND observed_at >= $2 "
-                "ORDER BY observed_at DESC LIMIT $3", sensor_id, since, limit,
+                "ORDER BY observed_at DESC LIMIT $3",
+                sensor_id,
+                since,
+                limit,
             )
         else:
             rows = await conn.fetch(
-                "SELECT * FROM readings WHERE sensor_id = $1 "
-                "ORDER BY observed_at DESC LIMIT $2", sensor_id, limit,
+                "SELECT * FROM readings WHERE sensor_id = $1 ORDER BY observed_at DESC LIMIT $2",
+                sensor_id,
+                limit,
             )
     return [dict(r) for r in rows]
 
@@ -340,15 +370,21 @@ async def ward_current(lga: str, ward: str):
             WHERE s.lganame = $1 AND s.wardname = $2
               AND r.observed_at > now() - interval '1 hour'
             """,
-            lga, ward,
+            lga,
+            ward,
         )
     if not row or row["n_readings"] == 0:
-        return {"lganame": lga, "wardname": ward, "n_readings": 0,
-                "note": "no sensor readings in the last hour"}
+        return {
+            "lganame": lga,
+            "wardname": ward,
+            "n_readings": 0,
+            "note": "no sensor readings in the last hour",
+        }
     return dict(row)
 
 
 # ----- Forecast proxy -----
+
 
 @app.get("/forecast")
 async def get_forecast():
@@ -364,6 +400,7 @@ async def get_forecast():
 
 
 # ----- Ward polygon load (admin) -----
+
 
 @app.post("/admin/load-wards")
 async def load_wards():
@@ -385,7 +422,9 @@ async def load_wards():
             await conn.execute(
                 "INSERT INTO ward_polygons (lganame, wardname, geom) "
                 "VALUES ($1, $2, ST_Multi(ST_GeomFromText($3, 4326)))",
-                r["lganame"], r["wardname"], wkt,
+                r["lganame"],
+                r["wardname"],
+                wkt,
             )
             inserted += 1
     return {"loaded": inserted}

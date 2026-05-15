@@ -5,37 +5,54 @@ For each target (NO2, rainfall, temperature):
   - Compare against persistence (t1 = t) and climatology (t1 = mean of same month, prior years)
   - Final model: trained on all available data, ready for May 2026 prediction
 """
+
 import json
-import joblib
-from pathlib import Path
-import numpy as np
-import pandas as pd
-import xgboost as xgb
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 # Project root, resolved relative to this file (was a sandbox-absolute path).
 from pathlib import Path as _Path
+
+import joblib
+import numpy as np
+import pandas as pd
+import xgboost as xgb
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+
 ROOT_DIR = _Path(__file__).resolve().parent.parent
 
-DATA = (ROOT_DIR / "data")
-MODEL = (ROOT_DIR / "model")
+DATA = ROOT_DIR / "data"
+MODEL = ROOT_DIR / "model"
 
 df = pd.read_csv(MODEL / "feature_table.csv")
-df["ym"] = df["year"]*12 + df["month"]
+df["ym"] = df["year"] * 12 + df["month"]
 
 TARGETS = ["no2_umol_m2", "rainfall_mm", "t2m_mean"]
-FEATURES = [c for c in df.columns if c.endswith("_lag1") or c.endswith("_lag2") or c.endswith("_lag3")
-            or c in ("month_sin","month_cos","flare_total_bcm_13yr","fac_total","fac_phc",
-                       "pop_total","pop_under5","ndvi_annual")]
+FEATURES = [
+    c
+    for c in df.columns
+    if c.endswith("_lag1")
+    or c.endswith("_lag2")
+    or c.endswith("_lag3")
+    or c
+    in (
+        "month_sin",
+        "month_cos",
+        "flare_total_bcm_13yr",
+        "fac_total",
+        "fac_phc",
+        "pop_total",
+        "pop_under5",
+        "ndvi_annual",
+    )
+]
 print(f"Features: {len(FEATURES)}")
 
 results = {}
 
 for target in TARGETS:
     target_col = f"{target}_t1"
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"TARGET: {target_col}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     valid = df.dropna(subset=[target_col])
     valid = valid.dropna(subset=FEATURES, how="all").reset_index(drop=True)
@@ -54,12 +71,17 @@ for target in TARGETS:
     for fold_month in months_sorted[4:]:
         train = valid[valid.ym < fold_month]
         test = valid[valid.ym == fold_month]
-        if len(train) < 30 or len(test) == 0: continue
+        if len(train) < 30 or len(test) == 0:
+            continue
 
         model = xgb.XGBRegressor(
-            n_estimators=200, max_depth=5, learning_rate=0.05,
-            subsample=0.85, colsample_bytree=0.85,
-            random_state=42, verbosity=0,
+            n_estimators=200,
+            max_depth=5,
+            learning_rate=0.05,
+            subsample=0.85,
+            colsample_bytree=0.85,
+            random_state=42,
+            verbosity=0,
         )
         model.fit(train[FEATURES], train[target_col])
         preds = model.predict(test[FEATURES])
@@ -86,7 +108,8 @@ for target in TARGETS:
             c_rmse = float(np.sqrt(mean_squared_error(test[target_col], np.full(len(test), clim_pred))))
             climatology_results.append({"month": int(fold_month), "n": int(len(test)), "rmse": c_rmse})
 
-    if not fold_results: continue
+    if not fold_results:
+        continue
     cv_rmse = np.mean([r["rmse"] for r in fold_results])
     cv_mae = np.mean([r["mae"] for r in fold_results])
     pers_rmse = np.mean([r["rmse"] for r in persistence_results]) if persistence_results else None
@@ -105,27 +128,35 @@ for target in TARGETS:
 
     # Final model: train on all available labeled data
     final = xgb.XGBRegressor(
-        n_estimators=300, max_depth=5, learning_rate=0.05,
-        subsample=0.85, colsample_bytree=0.85, random_state=42, verbosity=0,
+        n_estimators=300,
+        max_depth=5,
+        learning_rate=0.05,
+        subsample=0.85,
+        colsample_bytree=0.85,
+        random_state=42,
+        verbosity=0,
     )
     final.fit(valid[FEATURES], valid[target_col])
     joblib.dump(final, MODEL / f"model_{target}.joblib")
     fi = pd.DataFrame({"feature": FEATURES, "importance": final.feature_importances_})
     fi = fi.sort_values("importance", ascending=False).reset_index(drop=True)
-    print(f"  Top 5 features:")
+    print("  Top 5 features:")
     for _, r in fi.head(5).iterrows():
         print(f"    {r.feature:30s}  {r.importance:.3f}")
     fi.to_csv(MODEL / f"feature_importance_{target}.csv", index=False)
 
     results[target] = {
-        "cv_rmse": cv_rmse, "cv_mae": cv_mae,
-        "persistence_rmse": pers_rmse, "climatology_rmse": clim_rmse,
-        "skill_vs_persistence": (1 - cv_rmse/pers_rmse) if pers_rmse else None,
-        "skill_vs_climatology": (1 - cv_rmse/clim_rmse) if clim_rmse else None,
-        "n_folds": len(fold_results), "n_train_total": int(len(valid)),
+        "cv_rmse": cv_rmse,
+        "cv_mae": cv_mae,
+        "persistence_rmse": pers_rmse,
+        "climatology_rmse": clim_rmse,
+        "skill_vs_persistence": (1 - cv_rmse / pers_rmse) if pers_rmse else None,
+        "skill_vs_climatology": (1 - cv_rmse / clim_rmse) if clim_rmse else None,
+        "n_folds": len(fold_results),
+        "n_train_total": int(len(valid)),
         "model_path": str(MODEL / f"model_{target}.joblib"),
     }
 
 with open(MODEL / "skill_report.json", "w") as f:
     json.dump(results, f, indent=2)
-print(f"\nWrote skill report to {MODEL/'skill_report.json'}")
+print(f"\nWrote skill report to {MODEL / 'skill_report.json'}")

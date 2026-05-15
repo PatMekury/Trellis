@@ -6,9 +6,11 @@ GeoPackage: statewide (delta_wards) and pilot LGAs (pilot_wards).
 
 Source: GRID3 NGA - Operational Wards v2.0 (ArcGIS item 9ab61cff803a497986bf2716898c6902)
 """
-from pathlib import Path
+
 import shutil
 import subprocess
+from pathlib import Path
+
 import geopandas as gpd
 
 HERE = Path(__file__).parent
@@ -31,12 +33,20 @@ def fetch_delta() -> Path:
     if TMP_GEOJSON.exists():
         return TMP_GEOJSON
     cmd = [
-        "curl", "-sL", "--get", SERVICE,
-        "--data-urlencode", "where=state='Delta'",
-        "--data-urlencode", "outFields=*",
-        "--data-urlencode", "outSR=4326",
-        "--data-urlencode", "f=geojson",
-        "-o", str(TMP_GEOJSON),
+        "curl",
+        "-sL",
+        "--get",
+        SERVICE,
+        "--data-urlencode",
+        "where=state='Delta'",
+        "--data-urlencode",
+        "outFields=*",
+        "--data-urlencode",
+        "outSR=4326",
+        "--data-urlencode",
+        "f=geojson",
+        "-o",
+        str(TMP_GEOJSON),
     ]
     subprocess.run(cmd, check=True)
     return TMP_GEOJSON
@@ -47,21 +57,21 @@ def build():
     delta = gpd.read_file(src)
 
     # Rename v2.0 fields to Trellis canonical schema
-    delta = delta.rename(columns={
-        "state": "statename",
-        "lga": "lganame",
-        "ward": "wardname",
-    })
+    delta = delta.rename(
+        columns={
+            "state": "statename",
+            "lga": "lganame",
+            "ward": "wardname",
+        }
+    )
     for col in ("OBJECTID", "Shape__Area", "Shape__Length"):
         if col in delta.columns:
             delta = delta.drop(columns=col)
 
     pilot = delta[delta["lganame"].apply(lambda x: norm(x) in PILOT_LGAS)].copy()
 
-    print(f"delta: {len(delta)}  null geom: {delta.geometry.isna().sum()}  "
-          f"all valid: {delta.is_valid.all()}")
-    print(f"pilot: {len(pilot)}  null geom: {pilot.geometry.isna().sum()}  "
-          f"all valid: {pilot.is_valid.all()}")
+    print(f"delta: {len(delta)}  null geom: {delta.geometry.isna().sum()}  all valid: {delta.is_valid.all()}")
+    print(f"pilot: {len(pilot)}  null geom: {pilot.geometry.isna().sum()}  all valid: {pilot.is_valid.all()}")
 
     # SQLite struggles with mounted filesystems - write to /tmp, then copy
     if TMP_GPKG.exists():

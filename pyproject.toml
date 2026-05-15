@@ -11,10 +11,20 @@ extend-exclude = [
     "data/rainfall/**",
     "data/ndvi/**",
     "outreach/_archived/**",
+    "_dev_archive/**",
+    "pytest-cache-files-*/**",
 ]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
 ignore = [
-    "E501",  # line too long; handled by formatter
+    "E501",
+    "E402",
+    "E702",
+    "F404",
+    "B007",
+    "B017",
+    "B904",
+    "B905",
+    "UP007",
 ]

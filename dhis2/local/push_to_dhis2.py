@@ -11,16 +11,19 @@ Pre-requisites (do these once, in order):
 
 After step 7, query the data via /api/dataValueSets or visit Pivot Tables → Trellis 4-week forecast.
 """
+
 from __future__ import annotations
+
 import argparse
 import json
 import sys
 from pathlib import Path
 
-import requests
-
 # Project root, resolved relative to this file (was a sandbox-absolute path).
 from pathlib import Path as _Path
+
+import requests
+
 ROOT_DIR = _Path(__file__).resolve().parent.parent.parent
 
 DHIS2_URL = "http://localhost:8080"
@@ -30,7 +33,7 @@ DHIS2_PASSWORD = "Justpath1*"  # set to match the password changed in the DHIS2 
 HERE = Path(__file__).parent
 ORGUNIT_JSON = HERE / "nigeria_orgunits.json"
 WARD_UID_JSON = HERE / "ward_uid_lookup.json"
-FORECAST_JSON = (ROOT_DIR / "mvp/forecast_may_2026.json")
+FORECAST_JSON = ROOT_DIR / "mvp/forecast_may_2026.json"
 
 # Optional: forecast files for additional periods (June-December 2026 climatology).
 # These are written by model/forecast_horizon_2026.py.
@@ -53,7 +56,9 @@ def check_alive():
     try:
         r = session.get(f"{DHIS2_URL}/api/me", timeout=10)
         if r.status_code == 401:
-            sys.exit(f"401 Unauthorized — update DHIS2_PASSWORD in this script after changing the admin password in the DHIS2 UI.")
+            sys.exit(
+                "401 Unauthorized — update DHIS2_PASSWORD in this script after changing the admin password in the DHIS2 UI."
+            )
         r.raise_for_status()
         me = r.json()
         print(f"  authenticated as {me.get('name')}")
@@ -73,22 +78,54 @@ def post_orgunits():
         print(r.text[:500])
     else:
         stats = r.json().get("stats", {})
-        print(f"  imported: created={stats.get('created',0)} updated={stats.get('updated',0)} ignored={stats.get('ignored',0)}")
+        print(
+            f"  imported: created={stats.get('created', 0)} updated={stats.get('updated', 0)} ignored={stats.get('ignored', 0)}"
+        )
 
 
 def post_data_elements():
     print("Posting Trellis data elements...")
     elements = [
-        {"id": DE_NO2,  "name": "Trellis NO2 forecast",         "shortName": "NO2 fcst",
-         "valueType": "NUMBER",   "domainType": "AGGREGATE", "aggregationType": "AVERAGE"},
-        {"id": DE_RAIN, "name": "Trellis rainfall forecast",    "shortName": "Rain fcst",
-         "valueType": "NUMBER",   "domainType": "AGGREGATE", "aggregationType": "AVERAGE"},
-        {"id": DE_TEMP, "name": "Trellis temperature forecast", "shortName": "Temp fcst",
-         "valueType": "NUMBER",   "domainType": "AGGREGATE", "aggregationType": "AVERAGE"},
-        {"id": DE_TIER, "name": "Trellis alert tier",           "shortName": "Tier",
-         "valueType": "TEXT",     "domainType": "AGGREGATE", "aggregationType": "NONE"},
-        {"id": DE_MALARIA, "name": "Trellis malaria-risk tier", "shortName": "Malaria",
-         "valueType": "TEXT",     "domainType": "AGGREGATE", "aggregationType": "NONE"},
+        {
+            "id": DE_NO2,
+            "name": "Trellis NO2 forecast",
+            "shortName": "NO2 fcst",
+            "valueType": "NUMBER",
+            "domainType": "AGGREGATE",
+            "aggregationType": "AVERAGE",
+        },
+        {
+            "id": DE_RAIN,
+            "name": "Trellis rainfall forecast",
+            "shortName": "Rain fcst",
+            "valueType": "NUMBER",
+            "domainType": "AGGREGATE",
+            "aggregationType": "AVERAGE",
+        },
+        {
+            "id": DE_TEMP,
+            "name": "Trellis temperature forecast",
+            "shortName": "Temp fcst",
+            "valueType": "NUMBER",
+            "domainType": "AGGREGATE",
+            "aggregationType": "AVERAGE",
+        },
+        {
+            "id": DE_TIER,
+            "name": "Trellis alert tier",
+            "shortName": "Tier",
+            "valueType": "TEXT",
+            "domainType": "AGGREGATE",
+            "aggregationType": "NONE",
+        },
+        {
+            "id": DE_MALARIA,
+            "name": "Trellis malaria-risk tier",
+            "shortName": "Malaria",
+            "valueType": "TEXT",
+            "domainType": "AGGREGATE",
+            "aggregationType": "NONE",
+        },
     ]
     r = session.post(
         f"{DHIS2_URL}/api/metadata?importMode=COMMIT&identifier=UID&mergeMode=REPLACE",
@@ -160,19 +197,37 @@ def push_forecast(extra_paths: list[Path] | None = None):
         matched += 1
         period = f"{f['forecast_year']}{f['forecast_month']:02d}"
         if f.get("no2_forecast_umol_m2") is not None:
-            values.append({"dataElement": DE_NO2, "period": period, "orgUnit": ou,
-                           "value": str(round(f["no2_forecast_umol_m2"], 2))})
+            values.append(
+                {
+                    "dataElement": DE_NO2,
+                    "period": period,
+                    "orgUnit": ou,
+                    "value": str(round(f["no2_forecast_umol_m2"], 2)),
+                }
+            )
         if f.get("rainfall_forecast_mm") is not None:
-            values.append({"dataElement": DE_RAIN, "period": period, "orgUnit": ou,
-                           "value": str(round(f["rainfall_forecast_mm"], 1))})
+            values.append(
+                {
+                    "dataElement": DE_RAIN,
+                    "period": period,
+                    "orgUnit": ou,
+                    "value": str(round(f["rainfall_forecast_mm"], 1)),
+                }
+            )
         if f.get("t2m_forecast_c") is not None:
-            values.append({"dataElement": DE_TEMP, "period": period, "orgUnit": ou,
-                           "value": str(round(f["t2m_forecast_c"], 2))})
-        values.append({"dataElement": DE_TIER, "period": period, "orgUnit": ou,
-                       "value": f["tier"]})
+            values.append(
+                {
+                    "dataElement": DE_TEMP,
+                    "period": period,
+                    "orgUnit": ou,
+                    "value": str(round(f["t2m_forecast_c"], 2)),
+                }
+            )
+        values.append({"dataElement": DE_TIER, "period": period, "orgUnit": ou, "value": f["tier"]})
         if f.get("malaria_risk_tier"):
-            values.append({"dataElement": DE_MALARIA, "period": period, "orgUnit": ou,
-                           "value": f["malaria_risk_tier"]})
+            values.append(
+                {"dataElement": DE_MALARIA, "period": period, "orgUnit": ou, "value": f["malaria_risk_tier"]}
+            )
 
     print(f"  matched {matched}/{len(forecast)} wards to org units, {len(unmatched)} unmatched")
     if unmatched[:5]:
@@ -191,8 +246,10 @@ def push_forecast(extra_paths: list[Path] | None = None):
     resp = body.get("response", body)
     ic = resp.get("importCount") or body.get("importCount") or {}
     if ic:
-        print(f"  imported={ic.get('imported',0)} updated={ic.get('updated',0)} "
-              f"ignored={ic.get('ignored',0)} deleted={ic.get('deleted',0)}")
+        print(
+            f"  imported={ic.get('imported', 0)} updated={ic.get('updated', 0)} "
+            f"ignored={ic.get('ignored', 0)} deleted={ic.get('deleted', 0)}"
+        )
     # Conflicts/rejections — DHIS2 returns these in different keys depending on path
     conflicts = resp.get("conflicts") or body.get("conflicts") or []
     if conflicts:
@@ -212,12 +269,20 @@ def push_forecast(extra_paths: list[Path] | None = None):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--setup", action="store_true",
-                   help="One-time setup: post org units, data elements, data set")
-    p.add_argument("--all-periods", action="store_true",
-                   help="Push the canonical May 2026 forecast plus all forecast_2026_*.json files in this folder")
-    p.add_argument("--forecast", type=str, default=None,
-                   help="Explicit path to a single forecast file to push instead of (or in addition to) May 2026")
+    p.add_argument(
+        "--setup", action="store_true", help="One-time setup: post org units, data elements, data set"
+    )
+    p.add_argument(
+        "--all-periods",
+        action="store_true",
+        help="Push the canonical May 2026 forecast plus all forecast_2026_*.json files in this folder",
+    )
+    p.add_argument(
+        "--forecast",
+        type=str,
+        default=None,
+        help="Explicit path to a single forecast file to push instead of (or in addition to) May 2026",
+    )
     args = p.parse_args()
 
     print(f"Talking to DHIS2 at {DHIS2_URL}")

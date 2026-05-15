@@ -14,6 +14,7 @@ mvp/forecast_may_2026.json so push_to_dhis2.py can consume it unchanged
 
 The malaria-risk tier (model/malaria_risk.py) is applied to each month.
 """
+
 from __future__ import annotations
 
 import json
@@ -39,11 +40,15 @@ def build_climatology() -> pd.DataFrame:
     """
     df = pd.read_csv(PREDICTORS)
     df = df[(df["year"] >= 2019) & (df["year"] <= 2025)].copy()
-    g = df.groupby(["lganame", "wardname", "month"]).agg(
-        no2_climo=("no2_umol_m2", "mean"),
-        rain_climo=("rainfall_mm", "mean"),
-        temp_climo=("t2m_mean", "mean"),
-    ).reset_index()
+    g = (
+        df.groupby(["lganame", "wardname", "month"])
+        .agg(
+            no2_climo=("no2_umol_m2", "mean"),
+            rain_climo=("rainfall_mm", "mean"),
+            temp_climo=("t2m_mean", "mean"),
+        )
+        .reset_index()
+    )
     return g
 
 
@@ -60,20 +65,22 @@ def build_month_forecast(climo: pd.DataFrame, year: int, month: int) -> list[dic
         #   possible if NO2 above 50th pct
         #   else watch
         # We compute the threshold below from this month's pool.
-        out.append({
-            "lganame": r["lganame"],
-            "wardname": r["wardname"],
-            "forecast_year": year,
-            "forecast_month": month,
-            "no2_forecast_umol_m2": round(no2, 3),
-            "rainfall_forecast_mm": round(rain, 3),
-            "t2m_forecast_c": round(temp, 3),
-            "no2_climatology": round(no2, 3),  # by definition
-            "model": "climatology_v1",
-            "method_note": "Climatology-based seasonal expectation (mean of 2019-2025). "
-                           "Use for horizons >1 month, where model skill degrades.",
-            "n_obs": 7,  # 7 years of climatology
-        })
+        out.append(
+            {
+                "lganame": r["lganame"],
+                "wardname": r["wardname"],
+                "forecast_year": year,
+                "forecast_month": month,
+                "no2_forecast_umol_m2": round(no2, 3),
+                "rainfall_forecast_mm": round(rain, 3),
+                "t2m_forecast_c": round(temp, 3),
+                "no2_climatology": round(no2, 3),  # by definition
+                "model": "climatology_v1",
+                "method_note": "Climatology-based seasonal expectation (mean of 2019-2025). "
+                "Use for horizons >1 month, where model skill degrades.",
+                "n_obs": 7,  # 7 years of climatology
+            }
+        )
     if not out:
         return out
     no2_vals = sorted([w["no2_forecast_umol_m2"] for w in out])
@@ -83,9 +90,7 @@ def build_month_forecast(climo: pd.DataFrame, year: int, month: int) -> list[dic
         n = w["no2_forecast_umol_m2"]
         w["tier"] = "likely" if n >= p75 else ("possible" if n >= p50 else "watch")
         # Malaria tier
-        w["malaria_risk_tier"] = classify_malaria_risk(
-            w["rainfall_forecast_mm"], w["t2m_forecast_c"]
-        )
+        w["malaria_risk_tier"] = classify_malaria_risk(w["rainfall_forecast_mm"], w["t2m_forecast_c"])
     return out
 
 

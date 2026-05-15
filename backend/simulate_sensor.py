@@ -7,14 +7,14 @@ Usage:
     python3 simulate_sensor.py --enroll
     python3 simulate_sensor.py --send 10
 """
+
 import argparse
-import hmac
 import hashlib
+import hmac
 import json
 import random
-import sys
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import requests
 
@@ -48,20 +48,22 @@ def enroll():
 
 def send(n=10):
     """Send n synthetic minute-readings ending now."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     readings = []
     for i in range(n):
         t = now - timedelta(minutes=n - i)
         # Realistic ranges for Niger Delta urban PHC
-        readings.append({
-            "observed_at": t.isoformat(),
-            "pm25_raw": round(random.gauss(28, 4), 1),
-            "pm10_raw": round(random.gauss(48, 6), 1),
-            "no2_raw": round(random.gauss(22, 3), 1),
-            "temperature_c": round(random.gauss(28, 0.5), 2),
-            "humidity_pct": round(random.gauss(82, 3), 1),
-            "pressure_hpa": round(random.gauss(1011, 0.4), 2),
-        })
+        readings.append(
+            {
+                "observed_at": t.isoformat(),
+                "pm25_raw": round(random.gauss(28, 4), 1),
+                "pm10_raw": round(random.gauss(48, 6), 1),
+                "no2_raw": round(random.gauss(22, 3), 1),
+                "temperature_c": round(random.gauss(28, 0.5), 2),
+                "humidity_pct": round(random.gauss(82, 3), 1),
+                "pressure_hpa": round(random.gauss(1011, 0.4), 2),
+            }
+        )
     payload = {"sensor_id": SENSOR_ID, "readings": readings}
     body = json.dumps(payload).encode()
     sig = hmac_sign(body, SENSOR_SECRET)
@@ -81,7 +83,9 @@ def query():
     rows = r.json()
     print(f"Last 5 readings for {SENSOR_ID}:")
     for row in rows:
-        print(f"  {row['observed_at']}  pm25_raw={row['pm25_raw']}  pm25_cal={row['pm25']:.2f}  no2_cal={row['no2']:.2f}")
+        print(
+            f"  {row['observed_at']}  pm25_raw={row['pm25_raw']}  pm25_cal={row['pm25']:.2f}  no2_cal={row['no2']:.2f}"
+        )
 
 
 def ward_current():

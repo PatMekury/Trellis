@@ -5,15 +5,13 @@ Run from the repository root:
     cd mcp
     PYTHONPATH=. pytest tests/ -v
 """
+
 from __future__ import annotations
 
-import asyncio
-import os
 import sys
 from pathlib import Path
 
 import pytest
-
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -24,6 +22,7 @@ def _import_server():
         del sys.modules["server"]
     try:
         import server  # noqa: F401
+
         return server
     except SystemExit:
         # The mcp package is not installed; raise SystemExit per the module's
@@ -58,6 +57,7 @@ async def test_get_forecast_falls_back_to_local(monkeypatch):
 @pytest.mark.asyncio
 async def test_alert_list_filters_by_tier(monkeypatch):
     server = _import_server()
+
     # Stub the forecast loader with a deterministic small list
     async def stub_forecast():
         return [
@@ -65,9 +65,11 @@ async def test_alert_list_filters_by_tier(monkeypatch):
             {"lganame": "A", "wardname": "Y", "tier": "possible", "no2_forecast_umol_m2": 22},
             {"lganame": "A", "wardname": "Z", "tier": "watch", "no2_forecast_umol_m2": 14},
         ]
+
     monkeypatch.setattr(server, "get_forecast", stub_forecast)
     out = await server.tool_alert_list({"tier": "alert", "limit": 10})
     import json
+
     parsed = json.loads(out[0].text)
     # alert = likely + possible
     assert parsed["n_results"] == 2
@@ -77,19 +79,26 @@ async def test_alert_list_filters_by_tier(monkeypatch):
 @pytest.mark.asyncio
 async def test_priority_score_normalises_weights(monkeypatch):
     server = _import_server()
+
     # Stub minimal data
     async def stub_forecast():
         return [{"lganame": "A", "wardname": "X", "no2_forecast_umol_m2": 30}]
+
     async def stub_profiles():
-        return {"A|X": {"lga": "A", "ward": "X", "pop_under5": 5000,
-                         "flare_bcm": 0.5, "fac_phc": 2}}
+        return {"A|X": {"lga": "A", "ward": "X", "pop_under5": 5000, "flare_bcm": 0.5, "fac_phc": 2}}
+
     monkeypatch.setattr(server, "get_forecast", stub_forecast)
     monkeypatch.setattr(server, "get_ward_profiles", stub_profiles)
-    out = await server.tool_priority_score({
-        "weight_child": 1.0, "weight_no2": 0.0,
-        "weight_coverage_gap": 0.0, "weight_flare": 0.0,
-    })
+    out = await server.tool_priority_score(
+        {
+            "weight_child": 1.0,
+            "weight_no2": 0.0,
+            "weight_coverage_gap": 0.0,
+            "weight_flare": 0.0,
+        }
+    )
     import json
+
     parsed = json.loads(out[0].text)
     weights = parsed["weights_used"]
     # Weights should sum to ~1.0 after normalisation

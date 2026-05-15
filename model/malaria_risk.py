@@ -35,31 +35,29 @@ malaria transmission this month". To make incidence claims we would need
 DHIS2 surveillance case data integrated as the eighth predictor. That is
 explicitly an open question in trellis.md.
 """
+
 from __future__ import annotations
-
-from typing import Optional
-
 
 # -- Threshold parameters (constants kept here so they're reviewable) --
 
 # Rainfall (mm per month)
-RAIN_MIN_OPTIMAL = 50.0      # below this, breeding habitat is too sparse
-RAIN_MAX_OPTIMAL = 300.0     # above this, larvae flushing dominates
-RAIN_MIN_ACCEPTABLE = 30.0   # extended range, partial breeding possible
+RAIN_MIN_OPTIMAL = 50.0  # below this, breeding habitat is too sparse
+RAIN_MAX_OPTIMAL = 300.0  # above this, larvae flushing dominates
+RAIN_MIN_ACCEPTABLE = 30.0  # extended range, partial breeding possible
 RAIN_MAX_ACCEPTABLE = 400.0  # extended range, partial flushing
-RAIN_HIGH_SIGNAL = 100.0     # strong recent wetting threshold
+RAIN_HIGH_SIGNAL = 100.0  # strong recent wetting threshold
 
 # Temperature (deg C, monthly mean)
-TEMP_MIN_OPTIMAL = 22.0      # below this, EIP becomes very long
-TEMP_MAX_OPTIMAL = 30.0      # above this, vector mortality climbs
-TEMP_MIN_ACCEPTABLE = 18.0   # extended range
-TEMP_MAX_ACCEPTABLE = 33.0   # extended range
+TEMP_MIN_OPTIMAL = 22.0  # below this, EIP becomes very long
+TEMP_MAX_OPTIMAL = 30.0  # above this, vector mortality climbs
+TEMP_MIN_ACCEPTABLE = 18.0  # extended range
+TEMP_MAX_ACCEPTABLE = 33.0  # extended range
 
 
 def classify_malaria_risk(
-    rainfall_mm: Optional[float],
-    temperature_c: Optional[float],
-    rainfall_climatology_mm: Optional[float] = None,
+    rainfall_mm: float | None,
+    temperature_c: float | None,
+    rainfall_climatology_mm: float | None = None,
 ) -> str:
     """Return one of 'likely', 'possible', 'watch' for malaria transmission risk.
 
@@ -102,9 +100,9 @@ def classify_malaria_risk(
 
 
 def explain_classification(
-    rainfall_mm: Optional[float],
-    temperature_c: Optional[float],
-    rainfall_climatology_mm: Optional[float] = None,
+    rainfall_mm: float | None,
+    temperature_c: float | None,
+    rainfall_climatology_mm: float | None = None,
 ) -> str:
     """Return a one-line human-readable rationale for the tier."""
     tier = classify_malaria_risk(rainfall_mm, temperature_c, rainfall_climatology_mm)

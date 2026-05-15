@@ -10,11 +10,11 @@ require Postgres. The Postgres-bound paths (ingest with real ward attribution,
 ward_current with PostGIS) are tested with simulate_sensor.py against a live
 docker compose stack.
 """
+
 from __future__ import annotations
 
-import hmac
 import hashlib
-import json
+import hmac
 import os
 import sys
 
@@ -29,6 +29,7 @@ def app_module(monkeypatch):
     if "app" in sys.modules:
         del sys.modules["app"]
     import app
+
     return app
 
 
@@ -65,16 +66,21 @@ def test_pydantic_validates_channel_enum(app_module):
     # Enrollment channel must be PHC | school | community
     with pytest.raises(Exception):
         app_module.SensorEnrollIn(
-            sensor_id="TR-01", channel="bogus",
-            latitude=5.5, longitude=5.7, secret="x",
+            sensor_id="TR-01",
+            channel="bogus",
+            latitude=5.5,
+            longitude=5.7,
+            secret="x",
         )
 
 
 def test_pydantic_validates_required_secret(app_module):
     with pytest.raises(Exception):
         app_module.SensorEnrollIn(
-            sensor_id="TR-01", channel="PHC",
-            latitude=5.5, longitude=5.7,  # secret missing
+            sensor_id="TR-01",
+            channel="PHC",
+            latitude=5.5,
+            longitude=5.7,  # secret missing
         )
 
 
@@ -118,9 +124,7 @@ def test_hmac_rejects_wrong_signature(app_module):
     body = b'{"sensor_id":"TR-01","readings":[]}'
     secret = "real-secret"
     # Genuine signature for a different secret won't match
-    bad_sig_from_wrong_secret = hmac.new(
-        b"wrong-secret", body, hashlib.sha256
-    ).hexdigest()
+    bad_sig_from_wrong_secret = hmac.new(b"wrong-secret", body, hashlib.sha256).hexdigest()
     assert app_module.verify_hmac(secret, body, bad_sig_from_wrong_secret) is False
     # Tampered body — even with a correct-looking signature — must be rejected
     correct_sig = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()

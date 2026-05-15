@@ -1,5 +1,7 @@
 """Build per-ward gas-flare exposure layer for Trellis from World Bank GGFR data."""
+
 from __future__ import annotations
+
 import shutil
 from pathlib import Path
 
@@ -49,20 +51,23 @@ def main():
     delta_wards = gpd.read_file(TMP_GPKG, layer="delta_wards").to_crs("EPSG:4326")
 
     sites_in_delta = gpd.sjoin(
-        sites, delta_wards[["wardname", "lganame", "geometry"]],
-        how="inner", predicate="within"
+        sites, delta_wards[["wardname", "lganame", "geometry"]], how="inner", predicate="within"
     ).drop(columns=["index_right"])
     print(f"Flare sites within Delta State: {len(sites_in_delta)}")
     print(f"  cumulative BCM >= 0.01: {(sites_in_delta.total_bcm_2012_2024 >= 0.01).sum()}")
     print(f"  cumulative BCM >= 0.1:  {(sites_in_delta.total_bcm_2012_2024 >= 0.1).sum()}")
 
-    ward_summary = sites_in_delta.groupby(["lganame", "wardname"]).agg(
-        n_flare_sites=("Latitude", "size"),
-        total_bcm_13yr=("total_bcm_2012_2024", "sum"),
-        max_site_bcm=("total_bcm_2012_2024", "max"),
-        last_year_bcm=("last_bcm", "sum"),
-        operators=("operator", lambda s: ", ".join(sorted(set(s.dropna())))),
-    ).reset_index()
+    ward_summary = (
+        sites_in_delta.groupby(["lganame", "wardname"])
+        .agg(
+            n_flare_sites=("Latitude", "size"),
+            total_bcm_13yr=("total_bcm_2012_2024", "sum"),
+            max_site_bcm=("total_bcm_2012_2024", "max"),
+            last_year_bcm=("last_bcm", "sum"),
+            operators=("operator", lambda s: ", ".join(sorted(set(s.dropna())))),
+        )
+        .reset_index()
+    )
 
     pilot = gpd.read_file(TMP_GPKG, layer="pilot_wards")
     ward_polys = pilot.merge(ward_summary, on=["lganame", "wardname"], how="left")
@@ -71,9 +76,9 @@ def main():
     ward_polys["operators"] = ward_polys["operators"].fillna("")
 
     print(f"\nPilot wards with flares: {(ward_polys.n_flare_sites > 0).sum()} / {len(ward_polys)}")
-    print(f"\nTop 10 pilot wards by 13-year cumulative BCM:")
+    print("\nTop 10 pilot wards by 13-year cumulative BCM:")
     top = ward_polys.nlargest(10, "total_bcm_13yr")[
-        ["lganame","wardname","n_flare_sites","total_bcm_13yr","max_site_bcm"]
+        ["lganame", "wardname", "n_flare_sites", "total_bcm_13yr", "max_site_bcm"]
     ]
     print(top.to_string(index=False))
 
