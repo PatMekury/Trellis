@@ -1,0 +1,104 @@
+{
+  "no2": [
+    {
+      "feature": "month_cos",
+      "importance": 0.6323377
+    },
+    {
+      "feature": "ndvi_annual",
+      "importance": 0.11492677
+    },
+    {
+      "feature": "month_sin",
+      "importance": 0.11457216
+    },
+    {
+      "feature": "t2m_mean_lag3",
+      "importance": 0.028983934
+    },
+    {
+      "feature": "fac_phc",
+      "importance": 0.020038964
+    },
+    {
+      "feature": "t2m_mean_lag2",
+      "importance": 0.012704932
+    },
+    {
+      "feature": "rainfall_mm_lag2",
+      "importance": 0.012588312
+    },
+    {
+      "feature": "t2m_mean_lag1",
+      "importance": 0.011019838
+    }
+  ],
+  "rainfall": [
+    {
+      "feature": "month_cos",
+      "importance": 0.49527186
+    },
+    {
+      "feature": "ndvi_annual",
+      "importance": 0.15338673
+    },
+    {
+      "feature": "month_sin",
+      "importance": 0.14687347
+    },
+    {
+      "feature": "t2m_mean_lag3",
+      "importance": 0.038685724
+    },
+    {
+      "feature": "rainfall_mm_lag1",
+      "importance": 0.03490098
+    },
+    {
+      "feature": "rainfall_mm_lag3",
+      "importance": 0.023929348
+    },
+    {
+      "feature": "t2m_mean_lag2",
+      "importance": 0.021790436
+    },
+    {
+      "feature": "t2m_mean_lag1",
+      "importance": 0.016937135
+    }
+  ],
+  "temperature": [
+    {
+      "feature": "month_sin",
+      "importance": 0.2575785
+    },
+    {
+      "feature": "month_cos",
+      "importance": 0.2415588
+    },
+    {
+      "feature": "rainfall_mm_lag1",
+      "importance": 0.22675516
+    },
+    {
+      "feature": "t2m_mean_lag3",
+      "importance": 0.06612972
+    },
+    {
+      "feature": "t2m_mean_lag1",
+      "importance": 0.064644486
+    },
+    {
+      "feature": "rainfall_mm_lag2",
+      "importance": 0.04501351
+    },
+    {
+      "feature": "t2m_mean_lag2",
+      "importance": 0.03630902
+    },
+    {
+      "feature": "ndvi_annual",
+      "importance": 0.025295438
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+# Trellis local DHIS2 stack
+# Run from this directory:
+#   docker compose down -v   # only if you've had a failed boot (clears stale DB volume)
+#   docker compose up -d
+# First boot takes 2-3 minutes for database initialisation.
+# Open http://localhost:8080 — default login: admin / district
+# CHANGE THE ADMIN PASSWORD IMMEDIATELY in User profile -> Account.
+
+services:
+  postgres:
+    image: postgis/postgis:14-3.3
+    container_name: trellis-dhis2-db
+    environment:
+      POSTGRES_USER: dhis
+      POSTGRES_PASSWORD: dhis
+      POSTGRES_DB: dhis
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dhis -d dhis"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  dhis2:
+    image: dhis2/core:2.41.4
+    container_name: trellis-dhis2-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      JAVA_OPTS: -Xmx2048m -Xms1024m
+    ports:
+      - "8080:8080"
+    volumes:
+      # The image reads its database connection + encryption password from
+      # /opt/dhis2/dhis.conf. We bind-mount our config file there.
+      - ./dhis.conf:/opt/dhis2/dhis.conf:ro
+      # Persist user-uploaded files (logos, attachments, app store apps).
+      # dhis.conf has filestore.container = files, so DHIS2 writes here.
+      - dhis2-files:/opt/dhis2/files
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  dhis2-files:

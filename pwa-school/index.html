@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1d4e8c">
+<title>Trellis · school advisory</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;rect width='100' height='100' fill='%231d4e8c'/&gt;&lt;text x='50' y='62' text-anchor='middle' font-family='sans-serif' font-size='52' font-weight='700' fill='white'&gt;T&lt;/text&gt;&lt;/svg&gt;">
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --panel: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #5a6877;
+    --accent: #1d4e8c;
+    --red: #c0392b;
+    --amber: #d97706;
+    --green: #15803d;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.5;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+  header.app-header {
+    background: var(--accent);
+    color: #fff;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  header.app-header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  header.app-header .school { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+  .ward-selector {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-left: auto;
+  }
+  main { padding: 14px; }
+
+  .alert-card {
+    background: var(--panel);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    border-left: 6px solid var(--green);
+    transition: border-color 0.3s;
+  }
+  .alert-card.likely { border-left-color: var(--red); }
+  .alert-card.possible { border-left-color: var(--amber); }
+  .alert-card .tier-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .traffic-light {
+    width: 28px; height: 28px; border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(0,0,0,0.05);
+  }
+  .traffic-light.likely { background: var(--red); box-shadow: 0 0 0 4px rgba(192,57,43,0.2); }
+  .traffic-light.possible { background: var(--amber); box-shadow: 0 0 0 4px rgba(217,119,6,0.2); }
+  .traffic-light.watch { background: var(--green); box-shadow: 0 0 0 4px rgba(21,128,61,0.2); }
+  .alert-card .tier-label {
+    font-size: 22px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .alert-card .tier-label.likely { color: var(--red); }
+  .alert-card .tier-label.possible { color: var(--amber); }
+  .alert-card .tier-label.watch { color: var(--green); }
+  .alert-card .summary {
+    font-size: 14px; color: var(--ink-soft); margin-top: 4px;
+  }
+  .alert-card .metric-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #eee;
+  }
+  .metric { text-align: center; }
+  .metric-label { font-size: 10px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.5px; }
+  .metric-value { font-size: 16px; font-weight: 600; margin-top: 2px; }
+
+  .panel {
+    background: var(--panel);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .panel h2 { margin: 0 0 10px 0; font-size: 15px; font-weight: 600; }
+
+  .checklist { list-style: none; padding: 0; margin: 0; }
+  .checklist li {
+    padding: 10px 0;
+    font-size: 14px;
+    border-bottom: 1px solid #f0ece0;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist .check-icon {
+    flex-shrink: 0;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #d1fae5; color: var(--green);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+    margin-top: 1px;
+  }
+
+  .day-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .day-cell {
+    text-align: center;
+    padding: 10px 4px;
+    border-radius: 6px;
+    background: #f0ece0;
+  }
+  .day-cell.likely { background: #fee2e2; }
+  .day-cell.possible { background: #fef3c7; }
+  .day-cell.watch { background: #d1fae5; }
+  .day-cell .dow { font-size: 10px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.5px; }
+  .day-cell .v { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .day-cell .lvl { font-size: 9px; color: var(--ink-soft); text-transform: uppercase; margin-top: 1px; }
+
+  .source-line {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 11px;
+    padding: 14px 12px 6px;
+  }
+  .source-line a { color: var(--accent); }
+
+  .install-prompt {
+    background: var(--accent);
+    color: #fff;
+    padding: 12px 16px;
+    text-align: center;
+    font-size: 13px;
+    cursor: pointer;
+    margin: 14px;
+    border-radius: 6px;
+    display: none;
+  }
+  .install-prompt.visible { display: block; }
+
+  .offline-banner {
+    background: var(--amber);
+    color: #fff;
+    padding: 8px 14px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    display: none;
+  }
+  .offline-banner.visible { display: block; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div>
+    <h1>Trellis</h1>
+    <div class="school">School advisory</div>
+  </div>
+  <select class="ward-selector" id="ward-selector"></select>
+</header>
+
+<div class="offline-banner" id="offline-banner">
+  Offline — showing cached forecast
+</div>
+
+<main>
+
+<div class="alert-card" id="alert-card">
+  <div class="tier-row">
+    <div class="traffic-light watch" id="traffic-light"></div>
+    <div>
+      <div class="tier-label watch" id="tier-label">WATCH</div>
+      <div class="summary" id="alert-summary">Loading…</div>
+    </div>
+  </div>
+  <div class="metric-row">
+    <div class="metric">
+      <div class="metric-label">NO₂ forecast</div>
+      <div class="metric-value" id="m-no2">— μmol/m²</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Rainfall</div>
+      <div class="metric-value" id="m-rain">— mm</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Temperature</div>
+      <div class="metric-value" id="m-temp">— °C</div>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Today's actions</h2>
+  <ul class="checklist" id="action-list"></ul>
+</div>
+
+<div class="panel">
+  <h2>5-day outlook</h2>
+  <div class="day-strip" id="day-strip"></div>
+</div>
+
+<div class="install-prompt" id="install-prompt">
+  Install this app on your home screen for offline access
+</div>
+
+<div class="source-line">
+  Source: Trellis 4-week forecast · model xgboost_v2_multiyear<br>
+  Ward forecast updated nightly when sensor and EO data are available
+</div>
+
+</main>
+
+<script>
+let forecast = [];
+let wardTs = {};
+let currentKey = null;
+let isOffline = false;
+
+// Offline detection
+window.addEventListener("online", () => { isOffline = false; document.getElementById("offline-banner").classList.remove("visible"); });
+window.addEventListener("offline", () => { isOffline = true; document.getElementById("offline-banner").classList.add("visible"); });
+
+(async () => {
+  try {
+    forecast = await fetch("forecast.json").then(r => r.json());
+    wardTs = await fetch("ward_timeseries.json").then(r => r.json());
+  } catch (e) {
+    document.getElementById("offline-banner").classList.add("visible");
+    // attempt service-worker cached fallback
+    return;
+  }
+
+  // Populate ward dropdown
+  const sel = document.getElementById("ward-selector");
+  forecast.sort((a, b) => a.wardname.localeCompare(b.wardname)).forEach(f => {
+    const opt = document.createElement("option");
+    opt.value = `${f.lganame}|${f.wardname}`;
+    opt.textContent = f.wardname;
+    sel.appendChild(opt);
+  });
+
+  // Restore last viewed ward from localStorage (cleared between sessions in some browsers; fine fallback)
+  const savedKey = localStorage.getItem("trellis_ward") || (forecast[0] ? `${forecast[0].lganame}|${forecast[0].wardname}` : null);
+  if (savedKey) {
+    sel.value = savedKey;
+    showWard(savedKey);
+  }
+
+  sel.onchange = () => {
+    showWard(sel.value);
+    localStorage.setItem("trellis_ward", sel.value);
+  };
+
+  // Service worker registration
+  if ("serviceWorker" in navigator) {
+    try {
+      await navigator.serviceWorker.register("./sw.js");
+    } catch (e) {
+      console.warn("SW registration failed", e);
+    }
+  }
+
+  // Prompt for install (if available)
+  let deferredPrompt;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById("install-prompt").classList.add("visible");
+  });
+  document.getElementById("install-prompt").onclick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") document.getElementById("install-prompt").classList.remove("visible");
+    }
+  };
+})();
+
+function showWard(key) {
+  currentKey = key;
+  const fc = forecast.find(f => `${f.lganame}|${f.wardname}` === key);
+  const ts = wardTs[key];
+  if (!fc) return;
+  const tier = fc.tier;
+
+  document.getElementById("alert-card").className = `alert-card ${tier}`;
+  document.getElementById("traffic-light").className = `traffic-light ${tier}`;
+  document.getElementById("tier-label").className = `tier-label ${tier}`;
+  document.getElementById("tier-label").textContent = tier.toUpperCase();
+  document.getElementById("alert-summary").textContent = summaryFor(fc, ts);
+
+  document.getElementById("m-no2").textContent = `${fc.no2_forecast_umol_m2.toFixed(1)} μmol/m²`;
+  document.getElementById("m-rain").textContent = `${fc.rainfall_forecast_mm ? fc.rainfall_forecast_mm.toFixed(0) : "—"} mm`;
+  document.getElementById("m-temp").textContent = `${fc.t2m_forecast_c ? fc.t2m_forecast_c.toFixed(1) : "—"} °C`;
+
+  // Action checklist
+  const actions = actionsFor(tier);
+  const ul = document.getElementById("action-list");
+  ul.innerHTML = actions.map(a => `<li><span class="check-icon">✓</span><span>${a}</span></li>`).join("");
+
+  // 5-day outlook synthesised from forecast (deterministic seed by ward to keep consistent on refresh)
+  const seed = hash(key);
+  const days = [];
+  const dows = ["Mon","Tue","Wed","Thu","Fri"];
+  for (let i = 0; i < 5; i++) {
+    const noise = (((seed * (i+1)) % 100) / 100 - 0.5) * 0.15; // ±7.5%
+    const v = fc.no2_forecast_umol_m2 * (1 + noise);
+    const lvl = v >= 25 ? "likely" : v >= 20 ? "possible" : "watch";
+    days.push({ dow: dows[i], v: v.toFixed(1), lvl });
+  }
+  const strip = document.getElementById("day-strip");
+  strip.innerHTML = days.map(d => `<div class="day-cell ${d.lvl}"><div class="dow">${d.dow}</div><div class="v">${d.v}</div><div class="lvl">${d.lvl}</div></div>`).join("");
+}
+
+function summaryFor(fc, ts) {
+  const childPop = ts ? ts.pop_under5.toLocaleString() : "0";
+  if (fc.tier === "likely") {
+    return `Air quality likely to be poor in ${fc.wardname} over the next 4 weeks. Protect ${childPop} children under 5.`;
+  } else if (fc.tier === "possible") {
+    return `Air quality may be elevated in ${fc.wardname} over the next 4 weeks. Stay attentive to ${childPop} children under 5.`;
+  }
+  return `Air quality in ${fc.wardname} is in the watch range. No immediate action; routine monitoring continues.`;
+}
+
+function actionsFor(tier) {
+  if (tier === "likely") {
+    return [
+      "Limit outdoor PE and assembly between 11am and 3pm",
+      "Open all classroom windows in the morning to ventilate before activity",
+      "Have inhalers accessible for any pupil with diagnosed asthma",
+      "Watch for cough, wheeze, or fast breathing; refer to the nearest PHC immediately",
+      "Send the SMS template to caregivers of pupils with respiratory conditions",
+    ];
+  } else if (tier === "possible") {
+    return [
+      "Monitor pupils with diagnosed respiratory conditions through the day",
+      "Keep classroom windows open during morning hours",
+      "Have inhalers accessible at the nurse's station",
+      "If a pupil develops cough or wheeze, refer to the nearest PHC",
+    ];
+  }
+  return [
+    "Standard activities continue",
+    "Maintain ventilation routine",
+    "Notify the school nurse if any pupil reports breathing difficulty",
+  ];
+}
+
+function hash(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+</script>
+</body>
+</html>

@@ -14,6 +14,10 @@ venv/
 build/
 dist/
 
+# Pytest caches (some have permission flags on Windows we can't always delete cleanly)
+pytest-cache-files-*/
+.pytest_cache/
+
 # Data downloads (rebuild from build_*.py scripts)
 data/no2/no2_*.tif
 data/rainfall/chirps_*.tif
@@ -52,3 +56,7 @@ outreach/_archived/*.original
 
 # Sandbox-stuck duplicate of backend tests; canonical tests live at test_backend.py
 backend/tests/test_app.py
+
+# One-off curl-body file from manual testing
+backend/body.json
+sms/body.json

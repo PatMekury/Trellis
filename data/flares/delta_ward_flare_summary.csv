@@ -1,0 +1,39 @@
+lganame,wardname,n_flare_sites,total_bcm_13yr,max_site_bcm,last_year_bcm,operators
+Burutu,Ogulagha,38,0.241696686,0.044981598,0.16671307,"Shell, Sinopec Group"
+Ethiope East,Kokori,6,0.103544307,0.072185449,0.061425727,Shoreline Natural Resources
+Ethiope West,Oghareki 2,1,0.002016771,0.002016771,0.002016771,NPDC
+Isoko North,Owhe 2,10,0.176356769,0.040851196,0.15150223000000002,Shoreline Natural Resources
+Isoko North,Oyede,5,0.17806032300000002,0.166659322,0.119031639,"Eni, Oando Oil"
+Isoko North,Ozoro 3,10,0.520784455,0.124680389,0.43426210800000004,"NEPL, NPDC"
+Isoko South,Igbide,10,0.149813339,0.057997858,0.113400607,Shoreline Natural Resources
+Isoko South,Oleh 2,10,0.234821575,0.091942721,0.181231191,Shoreline Natural Resources
+Isoko South,Uzere,10,0.20961671399999998,0.037780197,0.194743201,Shoreline Natural Resources
+Ndokwa East,Aboh/Akarai,14,2.030825981,0.591254172,1.6084655190000001,"Eni, Oando Oil"
+Ndokwa East,Afor/Obikwele,10,0.202762405,0.052952339,0.202620346,Swift Oil
+Ndokwa East,Okpi/Utchi/Beneku,36,1.873554176,0.22843033,1.7602552519999999,"Eni, Oando Oil, Sterling Global"
+Ndokwa West,Emu,1,0.002797335,0.002797335,0.002797335,Energia
+Ndokwa West,Kwale,28,0.9291792219999999,0.101675405,0.81830972,"Energia, Midwestern O&G, Pillar Oil"
+Ndokwa West,Ndemili,6,0.112970954,0.026099161,0.112970954,Pan Ocean Oil
+Ndokwa West,Ogume 7,11,1.59400571,0.344366347,1.431528395,Energia
+Sapele,Amukpe,10,0.21930883199999998,0.12960571199999998,0.126637135,"SEPLAT Energy, SEPLAT Petroleum Development"
+Sapele,Gana,10,1.733201413,0.594887215,1.338002332,"SEPLAT Energy, SEPLAT Petroleum Development"
+Sapele,Okpe,2,0.030465824000000002,0.01839,0.030465824000000002,SEPLAT Energy
+Ughelli North,Afiesere/Ereumukohwaren,19,0.827610684,0.153069848,0.709620688,"NEPL, NPDC, Shoreline Natural Resources"
+Ughelli North,Agbarha-Otor,8,0.181336077,0.043236969,0.181336077,Shoreline Natural Resources
+Ughelli North,Agbarho 2,1,0.0,0.0,0.0,NPDC
+Ughelli North,Evwreni,5,0.00838391,0.003105489,0.00838391,Shoreline Natural Resources
+Ughelli South,Ekakpamre,10,0.176818323,0.040565522,0.150543451,"NEPL, NPDC"
+Ughelli South,Jeremi 1,6,0.007129947,0.006962913,0.007129947,NPDC
+Ughelli South,Jeremi 2,20,1.89117974,0.401672316,1.436146198,"NEPL, NPDC"
+Ukwuani,Ebedei,10,0.9031659470000001,0.35879678800000003,0.647344415,Platform Petroleum
+Warri North,Ebrohimi,10,0.33050329500000003,0.181964058,0.260296491,"Chevron, NEPL"
+Warri North,Eghoro,19,0.614847751,0.234439395,0.507406943,"Chevron, NEPL, NPDC"
+Warri North,Opuama,1,0.202558806,0.202558806,0.075311785,Chevron
+Warri North,Tsekelewu,10,0.827756001,0.14676,0.8124665529999999,"NEPL, NPDC"
+Warri South,Obodo,1,0.000993394,0.000993394,0.000993394,ConOil
+Warri South-West,Ajudaibo,3,0.008369597,0.008369597,0.008369597,Shell
+Warri South-West,Ogbe-Ijoh,26,1.140323966,0.16441198099999998,1.06475531,"NEPL, Neconde Energy"
+Warri South-West,Ogidigben,10,0.540161479,0.274954967,0.34627823,Shell
+Warri South-West,Okerenkoko,26,0.899942809,0.241818126,0.718305797,"Chevron, NEPL, NGPTC, Neconde Energy"
+Warri South-West,Oporozo,9,0.163191998,0.100763698,0.12144506599999999,"Chevron, NEPL"
+Warri South-West,Ugborodo,20,1.054009574,0.191336423,0.680301191,Shell
