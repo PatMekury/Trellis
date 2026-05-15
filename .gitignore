@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Trained model artefacts (rebuild from training script)
+*.joblib
+
+# Build outputs
+*.pyc
+build/
+dist/
+
+# Data downloads (rebuild from build_*.py scripts)
+data/no2/no2_*.tif
+data/rainfall/chirps_*.tif
+data/ndvi/ndvi_*.tif
+data/temperature/ward_temperature_daily.csv
+data/flares/ggfr_flare_locations_2012_2024.xlsx
+data/population/nga_pop_2024_1km.tif
+
+# Service runtime state
+sms/trellis_sms.db
+backend/postgres-data/
+*.db-journal
+*.gpkg-journal
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Outputs that get regenerated
+mvp/*.cache
+*.log
+
+# Duplicate predictor table from sprint refactor (canonical name is trellis_ward_month_predictors.csv)
+data/predictors/trellis_ward_month_predictors_multiyear.csv
+model/feature_table_multiyear.csv
+
+# Archived earlier drafts of letters of intent (kept for record, not for sending)
+outreach/_archived/*.deprecated*
+outreach/_archived/*.original
+
+# Sandbox-stuck duplicate of backend tests; canonical tests live at test_backend.py
+backend/tests/test_app.py

@@ -1,0 +1,19 @@
+All data and documentation under data/, *_DATA_CARD.md, and *_wrap.md files
+are licensed under the Creative Commons Attribution 4.0 International License
+(CC-BY 4.0).
+
+To view a copy of this license, visit:
+    https://creativecommons.org/licenses/by/4.0/
+
+Attribution requirement (when redistributing):
+    "Trellis open-data acquisition pipeline" plus a link to the project repository
+    (URL to be added when the repository is published).
+
+Underlying data sources retain their own licenses; consult the individual data cards:
+- GRID3 Nigeria: open data via GRID3 Data Hub
+- Sentinel-5P NO2: Copernicus open data via MEEO COG mirror on AWS
+- CHIRPS rainfall: public-domain UCSB Climate Hazards Center
+- NASA POWER: NASA open data, no restrictions
+- World Bank GGFR: CC-BY 4.0
+- WorldPop: CC-BY 4.0
+- Sentinel-2: Copernicus open data via Element 84 sentinel-cogs bucket

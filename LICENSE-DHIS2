@@ -1,0 +1,62 @@
+                    GNU GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+
+ Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
+
+This LICENSE-DHIS2 file applies to the DHIS2 connector code in this
+repository, specifically the contents of `dhis2/local/push_to_dhis2.py`,
+`dhis2/local/build_orgunits.py`, `dhis2/SETUP_LOCAL_DHIS2.md`, and any
+other code in `dhis2/` that interfaces directly with the DHIS2 Web API.
+This GPL coverage is required because DHIS2 itself is GPL-licensed and
+derivative connector code must follow.
+
+For the full text of the GNU General Public License version 3, see:
+https://www.gnu.org/licenses/gpl-3.0.txt
+
+The non-derivative parts of the Trellis project (everything outside the
+DHIS2 connector code path) are licensed under the MIT License — see the
+`LICENSE` file at the project root.
+
+The data and documentation are licensed under CC-BY 4.0 — see
+`LICENSE-DATA`.
+
+The sensor firmware in `firmware/` is licensed under the TAPR Open
+Hardware License — see `LICENSE-HARDWARE`.
+
+----- TL;DR of GPL-3.0 -----
+
+The GPL gives you the freedom to:
+
+  * Use the code for any purpose
+  * Study how the program works and modify it
+  * Redistribute copies
+  * Distribute modified versions
+
+Conditions:
+
+  * If you distribute the code (modified or not), you must include
+    this LICENSE-DHIS2 file.
+  * If you distribute modified versions, you must release the source
+    code of your modifications under the GPL too.
+  * You cannot distribute the code with additional restrictions.
+  * The code comes with no warranty.
+
+To read the full legal text, fetch from:
+
+    https://www.gnu.org/licenses/gpl-3.0.txt
+
+If your distribution is missing the full text, this file's reference
+to that URL serves as the canonical source.
+
+Copyright (C) 2026 Trellis project contributors
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.

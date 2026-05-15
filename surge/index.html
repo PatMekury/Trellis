@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trellis · primary care surge planning</title>
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --panel: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #5a6877;
+    --border: #d8d4c8;
+    --accent: #1d4e8c;
+    --red: #c0392b;
+    --amber: #d97706;
+    --green: #15803d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  header {
+    background: var(--ink);
+    color: #fff;
+    padding: 14px 22px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+  header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  header .tagline { font-size: 13px; color: #c0c0c0; }
+  header .right { margin-left: auto; font-size: 12px; color: #c0c0c0; }
+
+  main { padding: 20px; max-width: 1280px; margin: 0 auto; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .panel h2 { margin: 0 0 8px 0; font-size: 16px; }
+  .panel h3 { margin: 12px 0 6px 0; font-size: 13px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .controls {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .controls label { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .controls select, .controls input { padding: 5px 8px; font-size: 13px; border: 1px solid var(--border); border-radius: 3px; background: #fff; }
+
+  .button {
+    background: var(--accent); color: #fff; border: none; padding: 6px 14px;
+    border-radius: 3px; font-size: 12px; cursor: pointer; font-weight: 500;
+  }
+  .button:hover { background: #163d6f; }
+  .button.secondary { background: #fff; color: var(--ink); border: 1px solid var(--border); }
+  .button.secondary:hover { background: #f0ece0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: #f0ece0; font-weight: 600; color: var(--ink); cursor: pointer; user-select: none; }
+  th:hover { background: #e9e2cf; }
+  th.sort-asc::after { content: " ↑"; }
+  th.sort-desc::after { content: " ↓"; }
+  td.numeric { text-align: right; font-variant-numeric: tabular-nums; }
+  tr:hover { background: #faf8f3; cursor: pointer; }
+  tr.selected { background: #eef3f8; }
+
+  .alert-pill {
+    display: inline-block; padding: 2px 8px; border-radius: 10px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .alert-pill.likely { background: #fee2e2; color: var(--red); }
+  .alert-pill.possible { background: #fef3c7; color: var(--amber); }
+  .alert-pill.watch { background: #d1fae5; color: var(--green); }
+
+  .priority-bar {
+    display: inline-block; height: 8px; background: #e2725b; border-radius: 2px; vertical-align: middle;
+    margin-right: 4px;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+  @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .ward-detail {
+    background: #fafbfc; border: 1px solid var(--border); border-radius: 4px;
+    padding: 14px;
+  }
+  .ward-detail h2 { margin: 0; font-size: 17px; font-weight: 600; }
+  .ward-detail .small { font-size: 12px; color: var(--ink-soft); }
+  .ward-detail .stat-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;
+  }
+  .stat-box { background: #fff; padding: 8px 10px; border-radius: 3px; border: 1px solid var(--border); }
+  .stat-label { font-size: 10px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.4px; }
+  .stat-value { font-size: 16px; font-weight: 600; margin-top: 2px; }
+
+  textarea {
+    width: 100%; min-height: 70px; padding: 8px; font-family: inherit; font-size: 12px;
+    border: 1px solid var(--border); border-radius: 3px; resize: vertical;
+  }
+
+  .summary-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  .kpi {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 12px 14px;
+  }
+  .kpi .label { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi .value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+  .kpi .sub { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+  .kpi.likely { border-left: 4px solid var(--red); }
+
+  .roster-print { display: none; }
+
+  /* Print-optimised view: triggered by clicking "Morning brief" — rest of the page hidden */
+  body.print-mode > main > *:not(.roster-print) { display: none; }
+  body.print-mode .roster-print { display: block; max-width: 800px; margin: 0 auto; padding: 30px; }
+  body.print-mode header { display: none; }
+  body.print-mode .roster-print h1 { margin: 0 0 4px 0; }
+  body.print-mode .roster-print .lga-block { page-break-inside: avoid; margin-bottom: 24px; }
+  body.print-mode .roster-print table { font-size: 13px; }
+  @media print {
+    .controls, .button { display: none !important; }
+    body { background: #fff; }
+  }
+
+  .roster-print h1 { font-size: 22px; }
+  .roster-print h2 { font-size: 16px; border-bottom: 2px solid #1a1a1a; padding-bottom: 4px; margin-top: 16px; }
+  .roster-print .legend { font-size: 11px; color: var(--ink-soft); }
+  .footnote { color: var(--ink-soft); font-size: 11px; padding: 14px 0; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Trellis · primary care surge planning</h1>
+    <div class="tagline">For PHC supervisors — weekly briefing, ward priority list, exposed-child-units score</div>
+  </div>
+  <div class="right" id="last-updated">Last updated: …</div>
+</header>
+
+<main>
+
+<div class="summary-row">
+  <div class="kpi likely">
+    <div class="label">Highest-priority ward</div>
+    <div class="value" id="kpi-top" style="font-size: 16px;">—</div>
+    <div class="sub" id="kpi-top-score">Forecast persistence × children</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Wards in alert next 4 weeks</div>
+    <div class="value" id="kpi-alert">—</div>
+    <div class="sub">tier likely or possible</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Exposed children U5</div>
+    <div class="value" id="kpi-exposed">—</div>
+    <div class="sub">cumulative across alerted wards</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Wards with ≥ 1 PHC</div>
+    <div class="value" id="kpi-phc">—</div>
+    <div class="sub">staffable host facility</div>
+  </div>
+</div>
+
+<div class="panel">
+  <div style="display:flex; gap:0; margin-bottom:14px; border-bottom: 1px solid var(--border);">
+    <button class="disease-tab active" data-disease="general" style="padding: 10px 18px; border: none; background: none; cursor: pointer; font-size: 14px; border-bottom: 3px solid var(--accent); color: var(--accent); font-weight: 600;">General environmental alert</button>
+    <button class="disease-tab" data-disease="malaria" style="padding: 10px 18px; border: none; background: none; cursor: pointer; font-size: 14px; border-bottom: 3px solid transparent; color: var(--ink-soft);">Malaria risk</button>
+    <button class="disease-tab" data-disease="respiratory" style="padding: 10px 18px; border: none; background: none; cursor: pointer; font-size: 14px; border-bottom: 3px solid transparent; color: var(--ink-soft);">Paediatric respiratory</button>
+  </div>
+  <div class="controls">
+    <label>LGA filter:</label>
+    <select id="lga-filter"><option value="">All five pilot LGAs</option></select>
+    <label>Tier:</label>
+    <select id="tier-filter">
+      <option value="">All</option>
+      <option value="likely">Likely only</option>
+      <option value="possible">Possible only</option>
+      <option value="alert">Likely + possible</option>
+    </select>
+    <button class="button" id="export-csv">Export weekly roster (CSV)</button>
+    <button class="button secondary" id="print-brief">Morning brief (print view)</button>
+    <button class="button secondary" id="exit-print" style="display:none;">Back to app</button>
+  </div>
+  <p class="small" id="disease-help" style="margin: 0 0 12px 0; color: var(--ink-soft);">Combined view: ranks wards by NO₂ forecast × children-under-5, the composite environmental priority for surge planning.</p>
+
+  <div class="grid-2">
+    <div>
+      <table id="surge-table">
+        <thead>
+          <tr>
+            <th data-sort="rank">#</th>
+            <th data-sort="lganame">LGA</th>
+            <th data-sort="wardname">Ward</th>
+            <th data-sort="priority" class="numeric sort-desc">Priority</th>
+            <th data-sort="no2_forecast" class="numeric">NO₂ fcst</th>
+            <th data-sort="pop_under5" class="numeric">U5</th>
+            <th data-sort="fac_phc" class="numeric">PHCs</th>
+            <th data-sort="tier">Tier</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div>
+      <div class="ward-detail" id="ward-detail">
+        <p class="small">Click a row to see ward detail and add a supervisor note.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footnote">
+  Data: Trellis 4-week forecast, model xgboost_v2_multiyear · 91 months training · skill +48% NO₂ vs persistence
+</div>
+
+<!-- Print/morning-brief view, hidden by default -->
+<div class="roster-print" id="roster-print">
+  <h1>Trellis morning brief</h1>
+  <div class="legend">For PHC supervisor weekly review · generated <span id="brief-date"></span></div>
+  <div id="brief-body"></div>
+</div>
+
+</main>
+
+<script>
+(async () => {
+  const [forecast, wardTs] = await Promise.all([
+    fetch("forecast_may_2026.json").then(r => r.json()),
+    fetch("ward_timeseries.json").then(r => r.json()),
+  ]);
+
+  // Compose master row list with priority score = forecast_NO2 × U5 / 1000
+  function buildRows() {
+    const out = [];
+    for (const f of forecast) {
+      const ts = wardTs[`${f.lganame}|${f.wardname}`] || {};
+      const u5 = ts.pop_under5 || 0;
+      const fcst = f.no2_forecast_umol_m2 ?? 0;
+      const priority = (fcst * u5) / 1000;
+      out.push({
+        lganame: f.lganame,
+        wardname: f.wardname,
+        no2_forecast: fcst,
+        no2_climatology: f.no2_climatology,
+        rainfall_forecast: f.rainfall_forecast_mm,
+        t2m_forecast: f.t2m_forecast_c,
+        tier: f.tier,
+        malaria_risk_tier: f.malaria_risk_tier || "watch",
+        pop_total: ts.pop_total || 0,
+        pop_under5: u5,
+        fac_total: ts.fac_total || 0,
+        fac_phc: ts.fac_phc || 0,
+        priority,
+      });
+    }
+    return out;
+  }
+
+  const rows = buildRows();
+
+  // KPIs
+  function computeKpis(filteredRows) {
+    const top = [...filteredRows].sort((a, b) => b.priority - a.priority)[0];
+    const alerted = filteredRows.filter(r => r.tier !== "watch");
+    const exposed = alerted.reduce((s, r) => s + (r.pop_under5 || 0), 0);
+    const phcWards = filteredRows.filter(r => r.fac_phc > 0).length;
+    document.getElementById("kpi-top").textContent = top ? `${top.wardname} (${top.lganame})` : "—";
+    document.getElementById("kpi-top-score").textContent =
+      top ? `priority ${top.priority.toFixed(1)} · ${top.pop_under5.toLocaleString()} U5 children` : "";
+    document.getElementById("kpi-alert").textContent = alerted.length;
+    document.getElementById("kpi-exposed").textContent = exposed.toLocaleString();
+    document.getElementById("kpi-phc").textContent = `${phcWards} / ${filteredRows.length}`;
+  }
+
+  // Filters + sort state. `disease` switches the surge view:
+  //   general    -> rank by NO2 x U5 priority (current behaviour)
+  //   malaria    -> rank by malaria_risk_tier, then priority; show malaria-specific actions
+  //   respiratory -> rank by NO2 x U5 explicitly framed as paediatric respiratory exposure
+  const state = { lga: "", tier: "", sortKey: "priority", sortDir: "desc", selected: null, disease: "general" };
+
+  // LGA dropdown
+  const lgas = [...new Set(rows.map(r => r.lganame))].sort();
+  const lgaSel = document.getElementById("lga-filter");
+  for (const l of lgas) {
+    const opt = document.createElement("option");
+    opt.value = l; opt.textContent = l;
+    lgaSel.appendChild(opt);
+  }
+
+  function filteredRows() {
+    return rows.filter(r => {
+      if (state.lga && r.lganame !== state.lga) return false;
+      if (state.tier === "alert" && r.tier === "watch") return false;
+      if (state.tier && state.tier !== "alert" && r.tier !== state.tier) return false;
+      return true;
+    });
+  }
+
+  function sortedRows() {
+    const arr = filteredRows();
+    if (state.disease === "malaria") {
+      // Malaria view: tier likely first, then possible, then watch; priority breaks ties.
+      const order = { likely: 0, possible: 1, watch: 2 };
+      arr.sort((a, b) => {
+        const oa = order[a.malaria_risk_tier ?? "watch"] ?? 2;
+        const ob = order[b.malaria_risk_tier ?? "watch"] ?? 2;
+        if (oa !== ob) return oa - ob;
+        return (b.priority ?? 0) - (a.priority ?? 0);
+      });
+      return arr;
+    }
+    // General + respiratory both rank by the NO2 x U5 priority score; the
+    // distinction is in the action text and the framing, not the order.
+    arr.sort((a, b) => {
+      const va = a[state.sortKey] ?? 0;
+      const vb = b[state.sortKey] ?? 0;
+      const cmp = (typeof va === "string") ? va.localeCompare(vb) : va - vb;
+      return state.sortDir === "asc" ? cmp : -cmp;
+    });
+    return arr;
+  }
+
+  function actionFor(r) {
+    if (state.disease === "malaria") {
+      const m = r.malaria_risk_tier ?? "watch";
+      if (m === "likely") return "Pre-position RDTs + ACT; brief CHEWs on fever-screening protocol";
+      if (m === "possible") return "Stock-check antimalarials; weekly fever-watch reporting";
+      return "Routine surveillance";
+    }
+    if (state.disease === "respiratory") {
+      if (r.tier === "likely") return "Brief school nurses on under-5 wheeze; check inhaler stock at PHC";
+      if (r.tier === "possible") return "Caregiver SMS for known asthmatic toddlers";
+      return "Routine schedule";
+    }
+    if (r.tier === "likely") return "Pre-position oxygen + brief PHC team";
+    if (r.tier === "possible") return "Monitor weekly; standard staffing";
+    return "Routine schedule";
+  }
+
+  function tierForRow(r) {
+    return state.disease === "malaria" ? (r.malaria_risk_tier ?? "watch") : (r.tier ?? "watch");
+  }
+
+  function refreshTable() {
+    const arr = sortedRows();
+    const tbody = document.querySelector("#surge-table tbody");
+    tbody.innerHTML = "";
+    const maxPriority = Math.max(...arr.map(r => r.priority || 0), 1);
+    arr.forEach((r, i) => {
+      const tr = document.createElement("tr");
+      if (state.selected === `${r.lganame}|${r.wardname}`) tr.classList.add("selected");
+      const barW = Math.round((r.priority / maxPriority) * 80);
+      const action = actionFor(r);
+      const shownTier = tierForRow(r);
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${r.lganame}</td>
+        <td><strong>${r.wardname}</strong></td>
+        <td class="numeric"><span class="priority-bar" style="width:${barW}px;"></span>${r.priority.toFixed(1)}</td>
+        <td class="numeric">${r.no2_forecast.toFixed(1)}</td>
+        <td class="numeric">${r.pop_under5.toLocaleString()}</td>
+        <td class="numeric">${r.fac_phc}</td>
+        <td><span class="alert-pill ${shownTier}">${shownTier}</span></td>
+        <td class="small">${action}</td>
+      `;
+      tr.onclick = () => selectWard(`${r.lganame}|${r.wardname}`);
+      tbody.appendChild(tr);
+    });
+    computeKpis(arr);
+  }
+
+  function selectWard(key) {
+    state.selected = key;
+    refreshTable();
+    const r = rows.find(x => `${x.lganame}|${x.wardname}` === key);
+    if (!r) return;
+    const noteKey = `trellis_surge_note__${key}`;
+    const note = localStorage.getItem(noteKey) || "";
+    const detail = document.getElementById("ward-detail");
+    detail.innerHTML = `
+      <h2>${r.wardname}</h2>
+      <div class="small">${r.lganame} LGA · ${r.pop_total.toLocaleString()} residents · ${r.pop_under5.toLocaleString()} children U5</div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-label">Forecast NO₂</div><div class="stat-value">${r.no2_forecast.toFixed(1)} <span style="font-size:10px;font-weight:400">μmol/m²</span></div></div>
+        <div class="stat-box"><div class="stat-label">Climatology</div><div class="stat-value">${r.no2_climatology ? r.no2_climatology.toFixed(1) : "—"}</div></div>
+        <div class="stat-box"><div class="stat-label">Tier</div><div class="stat-value"><span class="alert-pill ${r.tier}">${r.tier}</span></div></div>
+        <div class="stat-box"><div class="stat-label">Priority score</div><div class="stat-value">${r.priority.toFixed(1)}</div></div>
+        <div class="stat-box"><div class="stat-label">Health facilities</div><div class="stat-value">${r.fac_total} <span style="font-size:10px;font-weight:400">(${r.fac_phc} PHC)</span></div></div>
+        <div class="stat-box"><div class="stat-label">Rainfall fcst</div><div class="stat-value">${r.rainfall_forecast ? r.rainfall_forecast.toFixed(0) + ' mm' : '—'}</div></div>
+      </div>
+      <h3>Suggested action</h3>
+      <p class="small">${
+        r.tier === "likely"
+          ? "Pre-position oxygen and nebuliser stock at the lead PHC. Brief community health workers on respiratory triage. Send caregiver SMS now."
+          : r.tier === "possible"
+          ? "Maintain standard staffing. Confirm inhaler stock at PHCs. Monitor weekly. Defer caregiver SMS until tier escalates."
+          : "Routine schedule. No additional action."
+      }</p>
+      <h3>Supervisor note</h3>
+      <textarea id="supervisor-note" placeholder="Type a note for this ward — saved in your browser only.">${note}</textarea>
+    `;
+    document.getElementById("supervisor-note").oninput = (e) => {
+      localStorage.setItem(noteKey, e.target.value);
+    };
+  }
+
+  // Wire up UI
+  lgaSel.onchange = e => { state.lga = e.target.value; refreshTable(); };
+  document.getElementById("tier-filter").onchange = e => { state.tier = e.target.value; refreshTable(); };
+
+  // Disease tabs: switch the surge view across general / malaria / paediatric respiratory.
+  const diseaseHelp = {
+    general: "Combined view: ranks wards by NO₂ forecast × children-under-5, the composite environmental priority for surge planning.",
+    malaria: "Malaria-risk view: ranks wards by environmental likelihood of malaria transmission (rainfall × temperature thresholds, EPIDEMIA-aligned). Action column shows malaria-specific PHC actions.",
+    respiratory: "Paediatric respiratory view: same NO₂ × under-5 ranking, framed for under-5 asthma and acute respiratory exposure. Action column targets school nurses, PHC inhaler stock, and caregivers of asthmatic toddlers.",
+  };
+  document.querySelectorAll(".disease-tab").forEach(btn => {
+    btn.onclick = () => {
+      state.disease = btn.dataset.disease;
+      document.querySelectorAll(".disease-tab").forEach(b => {
+        const isActive = b === btn;
+        b.classList.toggle("active", isActive);
+        b.style.borderBottom = isActive ? "3px solid var(--accent)" : "3px solid transparent";
+        b.style.color = isActive ? "var(--accent)" : "var(--ink-soft)";
+        b.style.fontWeight = isActive ? "600" : "400";
+      });
+      document.getElementById("disease-help").textContent = diseaseHelp[state.disease] || "";
+      refreshTable();
+    };
+  });
+  document.querySelectorAll("#surge-table th").forEach(th => {
+    th.onclick = () => {
+      const key = th.dataset.sort;
+      if (state.sortKey === key) state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+      else { state.sortKey = key; state.sortDir = "desc"; }
+      document.querySelectorAll("#surge-table th").forEach(x => x.classList.remove("sort-asc","sort-desc"));
+      th.classList.add(state.sortDir === "asc" ? "sort-asc" : "sort-desc");
+      refreshTable();
+    };
+  });
+
+  document.getElementById("export-csv").onclick = () => {
+    const arr = sortedRows();
+    const cols = ["lganame","wardname","priority","no2_forecast","no2_climatology",
+                  "rainfall_forecast","t2m_forecast","tier","pop_under5","fac_phc"];
+    const csv = [cols.join(",")];
+    for (const r of arr) csv.push(cols.map(c => JSON.stringify(r[c] ?? "")).join(","));
+    const blob = new Blob([csv.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `trellis_surge_roster_${state.lga || "all"}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  document.getElementById("print-brief").onclick = () => {
+    document.body.classList.add("print-mode");
+    document.getElementById("exit-print").style.display = "inline-block";
+    document.getElementById("brief-date").textContent = new Date().toLocaleDateString("en-GB",
+      { day:"numeric", month:"long", year:"numeric" });
+    const body = document.getElementById("brief-body");
+    body.innerHTML = "";
+    // One block per LGA
+    for (const lga of lgas) {
+      const lgaRows = sortedRows().filter(r => r.lganame === lga);
+      if (!lgaRows.length) continue;
+      const block = document.createElement("div");
+      block.className = "lga-block";
+      let html = `<h2>${lga}</h2><table><thead><tr><th>Ward</th><th>Tier</th><th>U5</th><th>NO₂ fcst</th><th>Action</th></tr></thead><tbody>`;
+      for (const r of lgaRows) {
+        const action = r.tier === "likely" ? "Pre-position oxygen + brief PHC team"
+                     : r.tier === "possible" ? "Monitor weekly; standard staffing"
+                     : "Routine";
+        html += `<tr><td>${r.wardname}</td><td>${r.tier}</td><td>${r.pop_under5.toLocaleString()}</td><td>${r.no2_forecast.toFixed(1)}</td><td>${action}</td></tr>`;
+      }
+      html += `</tbody></table>`;
+      block.innerHTML = html;
+      body.appendChild(block);
+    }
+  };
+  document.getElementById("exit-print").onclick = () => {
+    document.body.classList.remove("print-mode");
+    document.getElementById("exit-print").style.display = "none";
+  };
+
+  // Initial render
+  document.getElementById("last-updated").textContent =
+    "Last updated: " + new Date().toLocaleString("en-GB");
+  refreshTable();
+  // Auto-select top-priority ward
+  const top = sortedRows()[0];
+  if (top) selectWard(`${top.lganame}|${top.wardname}`);
+})();
+</script>
+</body>
+</html>

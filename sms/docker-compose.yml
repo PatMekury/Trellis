@@ -1,0 +1,18 @@
+services:
+  trellis-sms:
+    build: .
+    container_name: trellis-sms
+    environment:
+      TRELLIS_SMS_PROVIDER: mock
+      # Uncomment + set for live providers:
+      # TRELLIS_AT_USERNAME: sandbox
+      # TRELLIS_AT_API_KEY: your-api-key
+      # TRELLIS_TWILIO_SID: your-sid
+      # TRELLIS_TWILIO_TOKEN: your-token
+      # TRELLIS_TWILIO_FROM: "+15555550000"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./trellis_sms.db:/app/trellis_sms.db
+      - ./forecast.json:/app/forecast.json
+    restart: unless-stopped

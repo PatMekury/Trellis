@@ -1,0 +1,101 @@
+weighting,lganame,wardname,channel
+baseline,Warri South,Ekurede,PHC
+baseline,Warri South,Ubeji,PHC
+baseline,Warri South,Okere,PHC
+baseline,Warri South,Pessu,school
+baseline,Warri South,Igbudu,school
+baseline,Warri South,Avenue,community
+baseline,Warri South-West,Ugborodo,PHC
+baseline,Warri South-West,Ogbe-Ijoh,PHC
+baseline,Warri South-West,Okerenkoko,school
+baseline,Warri South-West,Ogidigben,school
+baseline,Warri South-West,Akpakpa,community
+baseline,Bomadi,Bomadi,PHC
+baseline,Bomadi,Kpakiama,PHC
+baseline,Bomadi,Akugbene 1,school
+baseline,Bomadi,Akugbene 2,school
+baseline,Bomadi,Esanma,community
+baseline,Burutu,Ogulagha,PHC
+baseline,Burutu,Kiagbodo,PHC
+baseline,Burutu,Tuomo,school
+baseline,Burutu,Egodor,school
+baseline,Burutu,Eseinbiri,community
+baseline,Patani,Patani 5,PHC
+baseline,Patani,Patani 2,school
+baseline,Patani,Agoloma,school
+baseline,Patani,Uduophori,community
+child,Warri South,Ekurede,PHC
+child,Warri South,Ubeji,PHC
+child,Warri South,Okere,PHC
+child,Warri South,Igbudu,school
+child,Warri South,Pessu,school
+child,Warri South,Avenue,community
+child,Warri South-West,Ogbe-Ijoh,PHC
+child,Warri South-West,Ugborodo,PHC
+child,Warri South-West,Okerenkoko,school
+child,Warri South-West,Oporozo,school
+child,Warri South-West,Akpakpa,community
+child,Bomadi,Bomadi,PHC
+child,Bomadi,Kpakiama,PHC
+child,Bomadi,Esanma,school
+child,Bomadi,Ogbeinma/Okoloba,school
+child,Bomadi,Akugbene 2,community
+child,Burutu,Ogulagha,PHC
+child,Burutu,Eseinbiri,PHC
+child,Burutu,Kiagbodo,school
+child,Burutu,Tuomo,school
+child,Burutu,Egodor,community
+child,Patani,Odorubu,PHC
+child,Patani,Patani 5,school
+child,Patani,Patani 2,school
+child,Patani,Patani 4,community
+exposure,Warri South,Pessu,PHC
+exposure,Warri South,Ekurede,PHC
+exposure,Warri South,Bowen,PHC
+exposure,Warri South,Okere,school
+exposure,Warri South,Igbudu,school
+exposure,Warri South,Avenue,community
+exposure,Warri South-West,Ogbe-Ijoh,PHC
+exposure,Warri South-West,Ugborodo,PHC
+exposure,Warri South-West,Okerenkoko,school
+exposure,Warri South-West,Ogidigben,school
+exposure,Warri South-West,Akpakpa,community
+exposure,Bomadi,Bomadi,PHC
+exposure,Bomadi,Kpakiama,PHC
+exposure,Bomadi,Ogo/Eze,school
+exposure,Bomadi,Akugbene 1,school
+exposure,Bomadi,Akugbene 2,community
+exposure,Burutu,Kiagbodo,PHC
+exposure,Burutu,Egodor,PHC
+exposure,Burutu,Ogulagha,school
+exposure,Burutu,Ngbilebiri,school
+exposure,Burutu,Torugbene,community
+exposure,Patani,Agoloma,PHC
+exposure,Patani,Patani 5,school
+exposure,Patani,Buluangiama,school
+exposure,Patani,Patani 2,community
+equity,Warri South,Bowen,PHC
+equity,Warri South,Ubeji,PHC
+equity,Warri South,Pessu,PHC
+equity,Warri South,Ekurede,school
+equity,Warri South,Okere,school
+equity,Warri South,Ode-Itsekiri,community
+equity,Warri South-West,Ugborodo,PHC
+equity,Warri South-West,Ogbe-Ijoh,PHC
+equity,Warri South-West,Akpakpa,school
+equity,Warri South-West,Ogidigben,school
+equity,Warri South-West,Okerenkoko,community
+equity,Bomadi,Bomadi,PHC
+equity,Bomadi,Kpakiama,PHC
+equity,Bomadi,Akugbene 2,school
+equity,Bomadi,Akugbene 1,school
+equity,Bomadi,Esanma,community
+equity,Burutu,Ojobo,PHC
+equity,Burutu,Tamigbe,PHC
+equity,Burutu,Kiagbodo,school
+equity,Burutu,Ogulagha,school
+equity,Burutu,Tuomo,community
+equity,Patani,Patani 5,PHC
+equity,Patani,Patani 2,school
+equity,Patani,Uduophori,school
+equity,Patani,Agoloma,community

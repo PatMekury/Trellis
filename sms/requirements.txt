@@ -1,0 +1,6 @@
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pydantic>=2.5
+# Optional SMS providers — install only the one you use:
+# africastalking>=1.2
+# twilio>=8.10

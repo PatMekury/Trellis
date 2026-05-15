@@ -1,0 +1,69 @@
+TAPR OPEN HARDWARE LICENSE
+Version 1.0, May 25, 2007
+
+Copyright (C) 2026 Trellis project contributors
+
+This LICENSE-HARDWARE file applies to the contents of the `firmware/`
+directory in this repository, including the ESP32 firmware source
+code in `firmware/src/`, the PlatformIO project configuration in
+`firmware/platformio.ini`, and any associated build files, schematics,
+or hardware design files that may be added to that directory.
+
+The Trellis sensor firmware is derived from the AirGradient open-hardware
+reference firmware, which is itself published under the TAPR Open Hardware
+License. Trellis modifications inherit that license.
+
+PREAMBLE
+
+Open Hardware is a thing - a physical artifact, either electrical or
+mechanical - whose design information is available to, and usable by,
+the public in a way that allows anyone to make, modify, distribute,
+and use that thing. In this preface, design information is called
+"documentation" and things created from it are called "products."
+
+The TAPR Open Hardware License ("OHL") agreement provides a framework
+for hardware projects that is similar to the one used for Open Source
+software. This license is specifically designed to ensure that:
+
+  (a) documentation may be made available without restriction;
+  (b) documentation may be modified by anyone, and modifications
+      may be redistributed;
+  (c) products made from the documentation may be made by anyone, and
+      such products may be sold and may be useful;
+  (d) attribution to the original designers is preserved when documentation
+      is redistributed;
+  (e) those who modify documentation share their modifications with the
+      community;
+  (f) limited rights to the trademarks, logos, and trade names of the
+      original designer are preserved.
+
+For the full text of the TAPR Open Hardware License v1.0, see:
+https://tapr.org/the-tapr-open-hardware-license/
+
+Summary of conditions (informational; the linked text governs):
+
+  * You may make, modify, distribute, and use the documentation and
+    products made from it.
+  * If you redistribute the documentation, you must include this
+    LICENSE-HARDWARE file and preserve attribution to the original
+    designers (including the AirGradient project, from whose reference
+    firmware this code is derived).
+  * If you modify the documentation and distribute the modified version,
+    you must release the modifications under the same TAPR OHL.
+  * Trademarks, logos, and trade names of the original designers are
+    not licensed under this OHL. They remain with their owners.
+  * No warranty.
+
+If your distribution is missing the full TAPR OHL text, the URL above is
+the canonical source.
+
+----- Acknowledgement of derivative work -----
+
+The Trellis sensor firmware adapts the AirGradient ONE reference firmware
+(https://github.com/airgradienthq/arduino) for HMAC-signed ingest to the
+Trellis backend. AirGradient publishes their reference under TAPR OHL.
+Trellis preserves that license and acknowledges AirGradient as the
+upstream open-hardware project.
+
+This is not legal advice. For commercial deployment or any redistribution,
+consult a lawyer familiar with open-hardware licensing in your jurisdiction.

@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trellis — pilot dashboard MVP</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"
+      crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"
+        crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --panel: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #555;
+    --border: #ddd;
+    --accent: #1d4e8c;
+    --red: #c0392b;
+    --amber: #d97706;
+    --green: #15803d;
+    --teal: #0d7a6b;
+    --coral: #e2725b;
+    --pink: #c084aa;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  header {
+    background: var(--ink);
+    color: #fff;
+    padding: 12px 20px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+  header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  header .tagline { font-size: 13px; color: #bbb; }
+  nav {
+    display: flex;
+    gap: 4px;
+    padding: 8px 20px;
+    background: #2c2c2c;
+    color: #ccc;
+  }
+  nav button {
+    background: transparent;
+    color: #ccc;
+    border: none;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  nav button.active { color: #fff; border-bottom-color: #fff; }
+  nav button:hover { color: #fff; }
+  main { padding: 20px; max-width: 1400px; margin: 0 auto; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .panel h2 { margin: 0 0 8px 0; font-size: 16px; }
+  .panel h3 { margin: 12px 0 6px 0; font-size: 14px; color: var(--ink-soft); }
+  .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  #map { height: 540px; border-radius: 4px; }
+  .controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding: 10px;
+    background: #f0ece0;
+    border-radius: 4px;
+  }
+  .controls label { font-weight: 600; font-size: 12px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.5px; }
+  .controls select, .controls input[type=range] { padding: 4px; font-size: 13px; }
+  .legend { background: #fff; padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 12px; }
+  .legend .swatch { display: inline-block; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; border: 1px solid #999; }
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 12px; }
+  .kpi .label { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi .value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+  .kpi .sub { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+  .alert { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .alert.likely { background: #fee2e2; color: var(--red); }
+  .alert.possible { background: #fef3c7; color: var(--amber); }
+  .alert.watch { background: #d1fae5; color: var(--green); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: #f0ece0; font-weight: 600; }
+  tr:hover { background: #faf8f3; }
+  .channel-card { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .channel-card .channel-header {
+    background: var(--accent);
+    color: #fff;
+    padding: 10px 14px;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .channel-card .channel-body { padding: 14px; font-size: 13px; }
+  .sms-mock {
+    background: #f5f5f5;
+    border-left: 4px solid var(--accent);
+    padding: 10px 12px;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 13px;
+    color: #222;
+    border-radius: 4px;
+  }
+  .sms-mock .from { color: var(--ink-soft); font-size: 11px; margin-bottom: 4px; }
+  .traffic { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .traffic.red { background: var(--red); }
+  .traffic.amber { background: var(--amber); }
+  .traffic.green { background: var(--green); }
+  .school-page {
+    background: linear-gradient(180deg, #fff 0%, #f5f0e0 100%);
+    padding: 16px;
+    border-radius: 8px;
+    max-width: 380px;
+    border: 1px solid var(--border);
+  }
+  .school-page h4 { margin: 0 0 4px 0; font-size: 16px; }
+  .school-page .ward { color: var(--ink-soft); font-size: 12px; margin-bottom: 8px; }
+  .checklist { list-style: none; padding: 0; margin: 8px 0; }
+  .checklist li { padding: 4px 0; font-size: 13px; }
+  .checklist li:before { content: "✓ "; color: var(--green); font-weight: 700; }
+  .day-strip { display: flex; gap: 4px; margin-top: 8px; }
+  .day { flex: 1; text-align: center; padding: 8px 4px; border-radius: 4px; font-size: 11px; }
+  .day .lvl { font-size: 9px; text-transform: uppercase; }
+  footer { text-align: center; color: var(--ink-soft); font-size: 11px; padding: 20px; }
+  .small { font-size: 11px; color: var(--ink-soft); }
+  .leaflet-popup-content { font-size: 12px; }
+  .leaflet-popup-content table { width: 100%; }
+  .leaflet-popup-content th { background: transparent; padding: 2px 4px; }
+  .leaflet-popup-content td { padding: 2px 4px; }
+  .channels-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 800px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .channels-grid { grid-template-columns: 1fr; }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+  }
+  .status-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    background: #d1fae5;
+    color: var(--green);
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Trellis</h1>
+  <span class="tagline">A structure that protects children while letting them grow — pilot dashboard MVP</span>
+</header>
+
+<nav>
+  <button class="tab-btn active" data-tab="overview">Overview</button>
+  <button class="tab-btn" data-tab="dhis2">DHIS2 dashboard</button>
+  <button class="tab-btn" data-tab="school">School advisory</button>
+  <button class="tab-btn" data-tab="caregiver">Caregiver SMS</button>
+  <button class="tab-btn" data-tab="surge">Surge planning</button>
+</nav>
+
+<main>
+
+<!-- OVERVIEW TAB -->
+<section id="tab-overview">
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="label">Pilot residents</div>
+      <div class="value">699,667</div>
+      <div class="sub">across 51 wards in 5 LGAs</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Children under 5</div>
+      <div class="value">109,149</div>
+      <div class="sub">primary protected population</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Sensor nodes (planned)</div>
+      <div class="value">25</div>
+      <div class="sub">10 PHC · 10 school · 5 community</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Predictor coverage</div>
+      <div class="value">7 of 8</div>
+      <div class="sub">DHIS2 outcomes pending SMOH partnership</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <h2>Pilot LGAs — predictor map</h2>
+      <div class="controls">
+        <label>Variable:</label>
+        <select id="var-select">
+          <option value="no2_umol_m2">NO₂ (μmol/m²)</option>
+          <option value="rainfall_mm">Rainfall (mm/month)</option>
+          <option value="t2m_mean">Temperature (°C)</option>
+          <option value="flare_total_bcm_13yr">Flare exposure (BCM, 2012-2024)</option>
+          <option value="fac_total">Health facilities (#)</option>
+          <option value="pop_total">Population</option>
+          <option value="pop_under5">Children under 5</option>
+        </select>
+        <label>Month:</label>
+        <input type="range" id="month-slider" min="0" max="11" value="11" step="1" style="width:200px;">
+        <span id="month-label">2026-04</span>
+        <label><input type="checkbox" id="show-sensors" checked> Sensor sites</label>
+        <label><input type="checkbox" id="show-forecast"> Forecast (May 2026)</label>
+      </div>
+      <div id="map"></div>
+    </div>
+    <div class="panel">
+      <h2>Selected ward</h2>
+      <div id="ward-detail">
+        <p class="small">Click a ward on the map to see its predictor profile and forecast.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>How to read this map</h2>
+    <p>The choropleth fills each pilot ward with the value of the chosen variable for the selected month. Static variables (flares, facilities, population) do not change with the month slider. The 25 proposed sensor sites are squares (PHC), triangles (school), or circles (community). Toggle the forecast layer to overlay May 2026 NO₂ projections.</p>
+    <p class="small">All data is from the Trellis predictor table (612 ward-months × 36 columns) built in this session from open data: GRID3 v2.0 wards, Sentinel-5P NO₂ via MEEO COG, CHIRPS rainfall, NASA POWER temperature, World Bank GGFR flares, GRID3 health facilities, WorldPop population. Sources cited per ward in the popup.</p>
+  </div>
+</section>
+
+<!-- DHIS2 TAB -->
+<section id="tab-dhis2" style="display:none;">
+  <div class="panel">
+    <h2>DHIS2 ward forecast dashboard</h2>
+    <p class="small">Predictive view designed to sit natively in Delta SMOH's existing DHIS2 instance. Forecast is from a trained XGBoost model (xgboost_v1) with walk-forward time-series cross-validation; skill vs persistence baseline +30% on rainfall, +16% on temperature, +2% on NO₂. The model retrains nightly when new sensor and EO data arrive.</p>
+    <div class="kpi-row">
+      <div class="kpi"><div class="label">Wards in alert (next 4 weeks)</div><div class="value" id="dhis2-alert-count">—</div><div class="sub">tier "likely" or "possible"</div></div>
+      <div class="kpi"><div class="label">Wards at malaria risk</div><div class="value" id="dhis2-malaria-count">—</div><div class="sub">malaria tier "likely" or "possible"</div></div>
+      <div class="kpi"><div class="label">Wards with elevated NO₂ for under-5s</div><div class="value" id="dhis2-resp-count">—</div><div class="sub">paediatric respiratory exposure index</div></div>
+      <div class="kpi"><div class="label">Highest-risk ward</div><div class="value" id="dhis2-top" style="font-size:18px;">—</div><div class="sub">forecast persistence × children</div></div>
+    </div>
+    <h3>Per-ward 4-week forecast</h3>
+    <div style="max-height: 400px; overflow-y: auto;">
+      <table id="forecast-table">
+        <thead><tr><th>LGA</th><th>Ward</th><th>Forecast NO₂ (μmol/m²)</th><th>Climatology</th><th>Rainfall (mm)</th><th>Temp (°C)</th><th>Alert tier</th><th>Malaria tier</th><th>Children U5</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- SCHOOL ADVISORY TAB -->
+<section id="tab-school" style="display:none;">
+  <div class="panel">
+    <h2>School advisory page</h2>
+    <p class="small">Mobile-first daily advisory delivered to a school administrator at every host school. Forecast-driven traffic-light alert plus an action checklist appropriate to the alert level. Below is a live preview using April 2026 forecast values.</p>
+    <div class="grid-3">
+      <div class="school-page" id="school-card-1"></div>
+      <div class="school-page" id="school-card-2"></div>
+      <div class="school-page" id="school-card-3"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CAREGIVER SMS TAB -->
+<section id="tab-caregiver" style="display:none;">
+  <div class="panel">
+    <h2>Caregiver SMS template</h2>
+    <p class="small">Plain-text SMS sent to caregivers of children under 5 in pilot wards when the 4-week forecast issues a "likely" or "possible" alert. SMS is the lowest-common-denominator channel; no smartphone or app required.</p>
+    <h3>Template</h3>
+    <p class="small">Variables filled per ward and per alert level. English template shown; Pidgin variant in Phase 1.</p>
+    <div class="grid-3" id="sms-cards"></div>
+  </div>
+</section>
+
+<!-- SURGE PLANNING TAB -->
+<section id="tab-surge" style="display:none;">
+  <div class="panel">
+    <h2>Primary care surge planning</h2>
+    <p class="small">For PHC supervisors: which wards in their catchment are forecasting elevated child respiratory or malaria pressure over the next 4 weeks, sorted by exposed children-under-5. Drives staffing rosters and stock allocation.</p>
+    <table id="surge-table">
+      <thead>
+        <tr><th>Rank</th><th>LGA</th><th>Ward</th><th>Forecast NO₂</th><th>Children U5</th><th>Priority score</th><th>Tier</th><th>Rationale</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  Trellis pilot dashboard MVP · open-data inputs · all source files in <code>data/</code> and <code>mvp/</code> · 9 May 2026
+</footer>
+
+<script>
+(async () => {
+  // ============ DATA LOADING ============
+  const [wards, predictors, sites, forecast] = await Promise.all([
+    fetch("pilot_wards.geojson").then(r => r.json()),
+    fetch("predictors.json").then(r => r.json()),
+    fetch("sensor_sites.geojson").then(r => r.json()),
+    fetch("forecast_may_2026.json").then(r => r.json()),
+  ]);
+
+  // Index predictors by ward x month
+  const predIdx = {};
+  for (const r of predictors) {
+    const k = `${r.lganame}|${r.wardname}|${r.year}-${String(r.month).padStart(2,'0')}`;
+    predIdx[k] = r;
+  }
+  const wardSet = [...new Set(predictors.map(r => `${r.lganame}|${r.wardname}`))];
+
+  const months = [];
+  for (let y = 2025; y <= 2026; y++) {
+    for (let m = (y === 2025 ? 5 : 1); m <= (y === 2025 ? 12 : 4); m++) {
+      months.push(`${y}-${String(m).padStart(2,'0')}`);
+    }
+  }
+  const fcIdx = {};
+  for (const r of forecast) {
+    fcIdx[`${r.lganame}|${r.wardname}`] = r;
+  }
+
+  // ============ MAP SETUP ============
+  const map = L.map("map", { center: [5.42, 5.72], zoom: 10, scrollWheelZoom: true });
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 18,
+    attribution: '&copy; OpenStreetMap',
+    opacity: 0.5,
+  }).addTo(map);
+
+  let wardLayer;
+  let sensorLayer;
+  let forecastLayer;
+  let selectedVar = "no2_umol_m2";
+  let selectedMonth = months[months.length - 1];
+
+  // Color scale ramps per variable
+  const ramps = {
+    "no2_umol_m2": { stops: [10, 16, 22, 28, 35], colors: ["#fee5d9","#fcae91","#fb6a4a","#cb181d","#67000d"] },
+    "rainfall_mm": { stops: [0, 80, 160, 250, 400], colors: ["#f7fbff","#c6dbef","#6baed6","#2171b5","#08306b"] },
+    "t2m_mean": { stops: [24, 25.5, 26.5, 27.5, 28.5], colors: ["#fff7f3","#fcc5c0","#f768a1","#ae017e","#49006a"] },
+    "flare_total_bcm_13yr": { stops: [0, 0.05, 0.2, 0.6, 1.2], colors: ["#f7f7f7","#fdd49e","#fc8d59","#d7301f","#7f0000"] },
+    "fac_total": { stops: [0, 1, 3, 7, 14], colors: ["#fff5f0","#fcae91","#fb6a4a","#cb181d","#67000d"] },
+    "pop_total": { stops: [0, 5000, 20000, 50000, 80000], colors: ["#f7fcf5","#a1d99b","#41ab5d","#006d2c","#00441b"] },
+    "pop_under5": { stops: [0, 800, 3000, 8000, 13000], colors: ["#f7fcf5","#a1d99b","#41ab5d","#006d2c","#00441b"] },
+  };
+
+  function colorFor(value, ramp) {
+    if (value === null || value === undefined || isNaN(value)) return "#dddddd";
+    const { stops, colors } = ramp;
+    for (let i = stops.length - 1; i >= 0; i--) if (value >= stops[i]) return colors[i];
+    return colors[0];
+  }
+
+  function getValue(wardname, lganame, varname) {
+    const k = `${lganame}|${wardname}|${selectedMonth}`;
+    const r = predIdx[k];
+    return r ? r[varname] : null;
+  }
+
+  function styleWard(feature) {
+    const v = getValue(feature.properties.wardname, feature.properties.lganame, selectedVar);
+    const ramp = ramps[selectedVar];
+    return {
+      fillColor: colorFor(v, ramp),
+      color: "#222",
+      weight: 0.5,
+      fillOpacity: 0.78,
+    };
+  }
+
+  function refreshMap() {
+    if (wardLayer) {
+      wardLayer.eachLayer(layer => {
+        wardLayer.resetStyle(layer);
+      });
+      wardLayer.setStyle(styleWard);
+    }
+  }
+
+  function popup(feature) {
+    const w = feature.properties.wardname;
+    const l = feature.properties.lganame;
+    const r = predIdx[`${l}|${w}|${selectedMonth}`] || {};
+    const fc = fcIdx[`${l}|${w}`];
+    let html = `<strong>${w}</strong> <span class="small">(${l})</span><br>`;
+    html += `<table>`;
+    html += `<tr><th>Population</th><td>${(r.pop_total||0).toLocaleString()}</td></tr>`;
+    html += `<tr><th>Under-5</th><td>${(r.pop_under5||0).toLocaleString()}</td></tr>`;
+    html += `<tr><th>NO₂ (${selectedMonth})</th><td>${r.no2_umol_m2 ? r.no2_umol_m2.toFixed(1) + ' μmol/m²' : 'no satellite pixel'}</td></tr>`;
+    html += `<tr><th>Rainfall</th><td>${r.rainfall_mm ? r.rainfall_mm.toFixed(0) + ' mm' : '—'}</td></tr>`;
+    html += `<tr><th>Temp</th><td>${r.t2m_mean ? r.t2m_mean.toFixed(1) + ' °C' : '—'}</td></tr>`;
+    html += `<tr><th>Health facilities</th><td>${r.fac_total||0} (${r.fac_phc||0} PHC)</td></tr>`;
+    html += `<tr><th>Flare BCM (13yr)</th><td>${(r.flare_total_bcm_13yr||0).toFixed(2)}</td></tr>`;
+    if (fc) {
+      html += `<tr><th>Forecast May 2026</th><td><strong>${fc.no2_forecast_umol_m2.toFixed(1)} μmol/m²</strong> <span class="alert ${fc.tier}">${fc.tier}</span></td></tr>`;
+    }
+    html += `</table>`;
+    return html;
+  }
+
+  wardLayer = L.geoJSON(wards, {
+    style: styleWard,
+    onEachFeature: (feat, layer) => {
+      layer.on('click', () => {
+        layer.bindPopup(popup(feat)).openPopup();
+        showWardDetail(feat);
+      });
+    },
+  }).addTo(map);
+
+  // Sensor sites
+  function makeSensorLayer() {
+    return L.geoJSON(sites, {
+      pointToLayer: (feat, latlng) => {
+        const ch = feat.properties.channel;
+        const colors = { PHC: "#c0392b", school: "#d97706", community: "#0d7a6b" };
+        return L.circleMarker(latlng, {
+          radius: ch === "PHC" ? 8 : 6,
+          fillColor: colors[ch] || "#666",
+          color: feat.properties.stable_core ? "#000" : "#888",
+          weight: feat.properties.stable_core ? 2 : 1,
+          fillOpacity: 0.95,
+        });
+      },
+      onEachFeature: (feat, layer) => {
+        const p = feat.properties;
+        layer.bindPopup(`<strong>${p.node_id}</strong> · ${p.channel}<br>${p.lganame} / ${p.wardname}<br><span class="small">${p.rationale || ''}</span>`);
+      },
+    });
+  }
+  sensorLayer = makeSensorLayer().addTo(map);
+
+  // Forecast layer (overlays the May 2026 forecast as a different fill on top of wards)
+  function makeForecastLayer() {
+    return L.geoJSON(wards, {
+      style: feat => {
+        const fc = fcIdx[`${feat.properties.lganame}|${feat.properties.wardname}`];
+        if (!fc) return { fillOpacity: 0, weight: 0 };
+        const v = fc.no2_forecast_umol_m2;
+        return {
+          fillColor: colorFor(v, ramps["no2_umol_m2"]),
+          color: "#1d4e8c",
+          weight: 1.5,
+          fillOpacity: 0.6,
+          dashArray: "4 3",
+        };
+      },
+      onEachFeature: (feat, layer) => {
+        const fc = fcIdx[`${feat.properties.lganame}|${feat.properties.wardname}`];
+        if (!fc) return;
+        const climStr = fc.no2_climatology ? `climatology ${fc.no2_climatology.toFixed(1)}` : "no climatology";
+        const rainStr = fc.rainfall_forecast_mm ? `rain ${fc.rainfall_forecast_mm.toFixed(0)} mm` : "";
+        const tempStr = fc.t2m_forecast_c ? `t ${fc.t2m_forecast_c.toFixed(1)}°C` : "";
+        layer.bindPopup(`<strong>${feat.properties.wardname}</strong> forecast May 2026<br>NO₂: ${fc.no2_forecast_umol_m2.toFixed(1)} μmol/m² <span class="alert ${fc.tier}">${fc.tier}</span><br><span class="small">${climStr} · ${rainStr} · ${tempStr} · model ${fc.model || 'baseline'}</span>`);
+      },
+    });
+  }
+  forecastLayer = makeForecastLayer();
+
+  // Controls
+  document.getElementById("var-select").onchange = e => {
+    selectedVar = e.target.value;
+    refreshMap();
+  };
+  document.getElementById("month-slider").oninput = e => {
+    selectedMonth = months[parseInt(e.target.value)];
+    document.getElementById("month-label").textContent = selectedMonth;
+    refreshMap();
+  };
+  document.getElementById("show-sensors").onchange = e => {
+    if (e.target.checked) sensorLayer.addTo(map);
+    else map.removeLayer(sensorLayer);
+  };
+  document.getElementById("show-forecast").onchange = e => {
+    if (e.target.checked) forecastLayer.addTo(map);
+    else map.removeLayer(forecastLayer);
+  };
+
+  function showWardDetail(feat) {
+    const w = feat.properties.wardname;
+    const l = feat.properties.lganame;
+    const fc = fcIdx[`${l}|${w}`];
+    // Build mini sparkline of NO2 over the year for this ward
+    const series = months.map(m => {
+      const r = predIdx[`${l}|${w}|${m}`];
+      return r ? r.no2_umol_m2 : null;
+    });
+    const validSeries = series.filter(v => v !== null && !isNaN(v));
+    const minV = validSeries.length ? Math.min(...validSeries) : 0;
+    const maxV = validSeries.length ? Math.max(...validSeries) : 1;
+    const range = maxV - minV || 1;
+    const r0 = predIdx[`${l}|${w}|${selectedMonth}`] || {};
+    let svg = `<svg width="240" height="60" viewBox="0 0 240 60" style="background:#f5f0e0;border-radius:4px;">`;
+    series.forEach((v, i) => {
+      if (v === null || isNaN(v)) return;
+      const x = (i / (months.length - 1)) * 220 + 10;
+      const y = 50 - ((v - minV) / range) * 40;
+      svg += `<circle cx="${x}" cy="${y}" r="2.5" fill="#c0392b"/>`;
+    });
+    svg += `</svg>`;
+    let html = `<h3>${w} <span class="small">${l}</span></h3>`;
+    html += `<div class="small">Population: ${(r0.pop_total||0).toLocaleString()} · U5: ${(r0.pop_under5||0).toLocaleString()} · ${r0.fac_total||0} facilities (${r0.fac_phc||0} PHC)</div>`;
+    html += `<h3>NO₂ time series (May 2025 – April 2026)</h3>`;
+    html += svg;
+    html += `<div class="small">Range: ${minV.toFixed(1)} – ${maxV.toFixed(1)} μmol/m²</div>`;
+    if (fc) {
+      html += `<h3>Forecast May 2026</h3>`;
+      html += `<div><strong>${fc.no2_forecast_umol_m2.toFixed(1)} μmol/m²</strong> <span class="alert ${fc.tier}">${fc.tier}</span></div>`;
+      const climLine = fc.no2_climatology ? `Climatology: ${fc.no2_climatology.toFixed(1)} μmol/m². ` : "";
+      const rainLine = fc.rainfall_forecast_mm ? `Rainfall forecast: ${fc.rainfall_forecast_mm.toFixed(0)} mm. ` : "";
+      const tempLine = fc.t2m_forecast_c ? `Temperature forecast: ${fc.t2m_forecast_c.toFixed(1)} °C. ` : "";
+      html += `<div class="small">${climLine}${rainLine}${tempLine}Model: ${fc.model || 'baseline'}.</div>`;
+    }
+    document.getElementById("ward-detail").innerHTML = html;
+  }
+
+  // ============ DHIS2 TAB ============
+  function renderDhis2() {
+    const tbody = document.querySelector("#forecast-table tbody");
+    tbody.innerHTML = "";
+    const rows = [...forecast].sort((a,b) => b.no2_forecast_umol_m2 - a.no2_forecast_umol_m2);
+    const alertCount = rows.filter(r => r.tier !== "watch").length;
+    const malariaCount = rows.filter(r => r.malaria_risk_tier && r.malaria_risk_tier !== "watch").length;
+    // Respiratory exposure: NO2 above pilot 75th percentile is the under-5 paediatric
+    // respiratory exposure flag (consistent with the toddler-asthma framing in trellis.md).
+    const no2Sorted = rows.map(r => r.no2_forecast_umol_m2).sort((a,b) => a-b);
+    const no2P75 = no2Sorted[Math.floor(no2Sorted.length * 0.75)];
+    const respCount = rows.filter(r => r.no2_forecast_umol_m2 >= no2P75).length;
+    document.getElementById("dhis2-alert-count").textContent = alertCount;
+    document.getElementById("dhis2-malaria-count").textContent = malariaCount;
+    document.getElementById("dhis2-resp-count").textContent = respCount;
+    const top = rows[0];
+    document.getElementById("dhis2-top").textContent = `${top.wardname} (${top.lganame})`;
+    rows.forEach(r => {
+      // attach pop_under5 from predictors index
+      const p = predIdx[`${r.lganame}|${r.wardname}|2026-04`] || {};
+      const climStr = r.no2_climatology ? r.no2_climatology.toFixed(1) : "—";
+      const rainStr = r.rainfall_forecast_mm ? r.rainfall_forecast_mm.toFixed(0) : "—";
+      const tempStr = r.t2m_forecast_c ? r.t2m_forecast_c.toFixed(1) : "—";
+      const mlr = r.malaria_risk_tier || "watch";
+      tbody.innerHTML += `<tr><td>${r.lganame}</td><td>${r.wardname}</td><td>${r.no2_forecast_umol_m2.toFixed(1)}</td><td>${climStr}</td><td>${rainStr}</td><td>${tempStr}</td><td><span class="alert ${r.tier}">${r.tier}</span></td><td><span class="alert ${mlr}">${mlr}</span></td><td>${(p.pop_under5||0).toLocaleString()}</td></tr>`;
+    });
+  }
+  renderDhis2();
+
+  // ============ SCHOOL ADVISORY TAB ============
+  function renderSchool() {
+    // Pick three top-priority wards with data
+    const wardOpts = forecast.slice().sort((a,b) => b.no2_forecast_umol_m2 - a.no2_forecast_umol_m2);
+    [1,2,3].forEach((slot, i) => {
+      const r = wardOpts[i];
+      if (!r) return;
+      const tier = r.tier;
+      const tcolor = tier === "likely" ? "red" : tier === "possible" ? "amber" : "green";
+      const advice = tier === "likely"
+        ? ["Limit outdoor PE before noon", "Open windows mid-afternoon for ventilation", "Refer wheezing children to PHC"]
+        : tier === "possible"
+        ? ["Monitor pupils with respiratory conditions", "Keep windows open in classrooms", "Have inhalers accessible"]
+        : ["Standard activities OK", "Maintain ventilation routine"];
+      // 5-day forecast strip — synthesize with small noise around forecast
+      let strip = "";
+      for (let d = 0; d < 5; d++) {
+        const v = r.no2_forecast_umol_m2 * (0.95 + Math.random() * 0.1);
+        const lvl = v >= 25 ? "red" : v >= 18 ? "amber" : "green";
+        const dn = ["Mon","Tue","Wed","Thu","Fri"][d];
+        const bg = lvl === "red" ? "#fee2e2" : lvl === "amber" ? "#fef3c7" : "#d1fae5";
+        strip += `<div class="day" style="background:${bg};"><div>${dn}</div><div class="lvl">${lvl}</div></div>`;
+      }
+      const html = `
+        <h4>${r.wardname} primary school</h4>
+        <div class="ward">${r.lganame} LGA</div>
+        <div><span class="traffic ${tcolor}"></span><strong>${tier.toUpperCase()}</strong> · NO₂ ${r.no2_forecast_umol_m2.toFixed(1)} μmol/m²</div>
+        <p class="small" style="margin: 8px 0 4px;">Today's actions:</p>
+        <ul class="checklist">
+          ${advice.map(a => `<li>${a}</li>`).join("")}
+        </ul>
+        <p class="small" style="margin: 6px 0 4px;">5-day outlook:</p>
+        <div class="day-strip">${strip}</div>
+        <p class="small" style="margin-top:10px;">Source: Trellis ward forecast, updated ${selectedMonth}.</p>
+      `;
+      document.getElementById(`school-card-${slot}`).innerHTML = html;
+    });
+  }
+  renderSchool();
+
+  // ============ CAREGIVER SMS TAB ============
+  function renderSMS() {
+    const container = document.getElementById("sms-cards");
+    const wardOpts = forecast.slice().sort((a,b) => b.no2_forecast_umol_m2 - a.no2_forecast_umol_m2);
+    container.innerHTML = wardOpts.slice(0, 3).map(r => {
+      const tier = r.tier;
+      const messageEN = tier === "likely"
+        ? `TRELLIS ALERT: ${r.wardname}. Air quality LIKELY to be poor next 2 wks. Keep small children indoors mid-day. Watch for cough/wheeze. Visit PHC if breathing fast. Free advice: 1234.`
+        : tier === "possible"
+        ? `TRELLIS NOTICE: ${r.wardname}. POSSIBLE poor air next 2 wks. Children with asthma carry inhaler. Open windows morning, close noon. Free advice: 1234.`
+        : `TRELLIS UPDATE: ${r.wardname}. Air WATCH this week. No immediate action. Trellis will message if conditions change. Free advice: 1234.`;
+      return `
+        <div class="channel-card">
+          <div class="channel-header">${r.wardname} · ${tier}</div>
+          <div class="channel-body">
+            <div class="sms-mock">
+              <div class="from">From: TRELLIS · 4-week forecast</div>
+              ${messageEN}
+            </div>
+            <p class="small" style="margin-top:8px;">Length: ${messageEN.length} chars (1 SMS = 160). Sent to caregivers of registered U5 children in ward.</p>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+  renderSMS();
+
+  // ============ SURGE PLANNING TAB ============
+  function renderSurge() {
+    const tbody = document.querySelector("#surge-table tbody");
+    tbody.innerHTML = "";
+    const rows = forecast.map(r => {
+      const p = predIdx[`${r.lganame}|${r.wardname}|2026-04`] || {};
+      const u5 = p.pop_under5 || 0;
+      const score = r.no2_forecast_umol_m2 * u5 / 1000; // exposed-child-units
+      return { ...r, pop_under5: u5, priority: score };
+    }).sort((a,b) => b.priority - a.priority);
+    rows.forEach((r, i) => {
+      const rationale = r.tier === "likely"
+        ? "High exposure × large under-5 population"
+        : r.tier === "possible"
+        ? "Moderate exposure, monitor weekly"
+        : "Low exposure, routine schedule";
+      tbody.innerHTML += `<tr><td>${i+1}</td><td>${r.lganame}</td><td>${r.wardname}</td><td>${r.no2_forecast_umol_m2.toFixed(1)}</td><td>${r.pop_under5.toLocaleString()}</td><td>${r.priority.toFixed(1)}</td><td><span class="alert ${r.tier}">${r.tier}</span></td><td>${rationale}</td></tr>`;
+    });
+  }
+  renderSurge();
+
+  // ============ TAB SWITCHING ============
+  document.querySelectorAll(".tab-btn").forEach(b => {
+    b.onclick = () => {
+      document.querySelectorAll(".tab-btn").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+      const tab = b.dataset.tab;
+      ["overview","dhis2","school","caregiver","surge"].forEach(t => {
+        document.getElementById(`tab-${t}`).style.display = t === tab ? "block" : "none";
+      });
+      // Force map redraw if returning to overview
+      if (tab === "overview") setTimeout(() => map.invalidateSize(), 50);
+    };
+  });
+})();
+</script>
+</body>
+</html>

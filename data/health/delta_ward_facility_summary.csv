@@ -1,0 +1,262 @@
+lganame,wardname,n_facilities,n_phc,n_secondary,n_tertiary,n_public,n_private
+Aniocha North,Ezi,2,2,0,0,2,0
+Aniocha North,Idumuje-Unor,4,4,0,0,3,0
+Aniocha North,Issele-Mkpitime,6,5,1,0,2,2
+Aniocha North,Issele-Uku 1,1,1,0,0,0,0
+Aniocha North,Issele-Uku 2,6,2,4,0,3,3
+Aniocha North,Obior/Onicha-Uku,4,3,1,0,3,0
+Aniocha North,Obomkpa,3,3,0,0,3,0
+Aniocha North,Onicha-Olona,2,1,1,0,2,0
+Aniocha North,Onicha-Ugbo,3,3,0,0,1,0
+Aniocha North,Ugbodu,3,3,0,0,3,0
+Aniocha South,Adonte,4,4,0,0,4,0
+Aniocha South,Agiadiasi,4,2,2,0,2,2
+Aniocha South,Ejeme/Egbudu,5,5,0,0,3,0
+Aniocha South,Ewulu/Isheagu,3,3,0,0,3,0
+Aniocha South,Nsukwa,2,2,0,0,2,0
+Aniocha South,Otulu,6,6,0,0,5,0
+Aniocha South,Ubulu-Okiti,2,2,0,0,1,1
+Aniocha South,Ubulu-Uku 1,3,2,1,0,1,1
+Aniocha South,Ubulu-Uku 2,2,2,0,0,1,0
+Aniocha South,Ubulu-Unor,2,2,0,0,2,0
+Aniocha South,Umudei,2,0,2,0,2,0
+Bomadi,Akugbene 1,1,0,1,0,0,0
+Bomadi,Akugbene 3,1,1,0,0,1,0
+Bomadi,Bomadi,4,3,1,0,2,2
+Bomadi,Ekaametagbene/Kalafio,3,3,0,0,0,0
+Bomadi,Esanma,1,1,0,0,1,0
+Bomadi,Kpakiama,4,3,1,0,1,1
+Bomadi,Ogbeinma/Okoloba,3,3,0,0,2,0
+Bomadi,Ogo/Eze,2,2,0,0,1,0
+Bomadi,Ogriagbene,2,1,1,0,1,0
+Burutu,Bolou-Ndoro,2,2,0,0,2,0
+Burutu,Egodor,5,5,0,0,2,0
+Burutu,Eseinbiri,4,4,0,0,2,1
+Burutu,Kiagbodo,3,2,1,0,0,0
+Burutu,Ngbilebiri,2,2,0,0,0,0
+Burutu,Obetebe,5,4,1,0,3,1
+Burutu,Ogulagha,7,5,2,0,2,1
+Burutu,Ojobo,2,1,1,0,2,0
+Burutu,Tamigbe,1,1,0,0,1,0
+Burutu,Torugbene,3,3,0,0,1,0
+Burutu,Tuomo,3,3,0,0,3,0
+Ethiope East,Abraka,7,6,0,1,3,2
+Ethiope East,Egbo,1,1,0,0,1,0
+Ethiope East,Eku,4,2,2,0,3,0
+Ethiope East,Igun,2,2,0,0,2,0
+Ethiope East,Isiokolo,3,1,2,0,3,0
+Ethiope East,Kokori,4,3,1,0,2,1
+Ethiope East,Okpara,6,4,2,0,3,2
+Ethiope East,Orhaorpo,1,1,0,0,1,0
+Ethiope East,Oria,2,2,0,0,1,0
+Ethiope East,Ovu,2,2,0,0,2,0
+Ethiope East,Urhuovie,4,3,1,0,2,1
+Ethiope West,Jesse 1,5,5,0,0,2,0
+Ethiope West,Jesse 2,4,3,1,0,3,0
+Ethiope West,Jesse 3,1,1,0,0,1,0
+Ethiope West,Jesse 4,4,3,1,0,1,1
+Ethiope West,Mosogar 1,3,3,0,0,3,0
+Ethiope West,Mosogar 2,3,3,0,0,1,0
+Ethiope West,Ogharefe 1,5,5,0,0,3,1
+Ethiope West,Ogharefe 2,7,6,1,0,2,1
+Ethiope West,Ogharefe 3,3,2,0,1,2,1
+Ethiope West,Oghareki 1,1,1,0,0,0,0
+Ethiope West,Oghareki 2,3,3,0,0,2,0
+Ika North East,Akumazi,6,6,0,0,4,0
+Ika North East,Boji-Boji Owa 1,4,3,1,0,0,3
+Ika North East,Boji-Boji Owa 2,5,3,2,0,1,4
+Ika North East,Idumuesah,1,1,0,0,1,0
+Ika North East,Mbiri,1,1,0,0,1,0
+Ika North East,Otolokpo,1,1,0,0,1,0
+Ika North East,Owa-Alero,2,2,0,0,1,1
+Ika North East,Owa-Alizomor,3,2,1,0,3,0
+Ika North East,Owa-Oyibu,2,1,1,0,2,0
+Ika North East,Owanta,2,1,1,0,0,0
+Ika North East,Umunede,5,2,3,0,2,3
+Ika North East,Ute-Ogbeje,2,2,0,0,1,0
+Ika North East,Ute-Okpu,5,4,0,1,2,0
+Ika South,Abavo Central,5,5,0,0,3,1
+Ika South,Agbor Obi,1,1,0,0,0,1
+Ika South,Agbor-Nta,8,8,0,0,4,0
+Ika South,Agbor-Obi 2,1,1,0,0,1,0
+Ika South,Alihagwu,2,2,0,0,1,1
+Ika South,Boji-Boji Agbor 7,4,2,2,0,3,0
+Ika South,Boji-Boji Agbor 8,5,3,2,0,0,5
+Ika South,Ekuku Agbor,5,4,1,0,2,1
+Ika South,Emuhu,7,5,1,1,1,3
+Ika South,Oyoko,6,5,1,0,3,0
+Ika South,Ozanogogo,6,6,0,0,6,0
+Ika South,Udomi-Azuowa,2,2,0,0,2,0
+Isoko North,Ellu,2,2,0,0,2,0
+Isoko North,Emevor,2,2,0,0,2,0
+Isoko North,Iyede 1,3,3,0,0,3,0
+Isoko North,Iyede 2,2,2,0,0,1,0
+Isoko North,Ofagbe,2,1,1,0,2,0
+Isoko North,Okpe-Isoko,1,1,0,0,1,0
+Isoko North,Owhe 1,2,1,1,0,2,0
+Isoko North,Owhe 2,3,3,0,0,3,0
+Isoko North,Owhe 3,2,2,0,0,1,0
+Isoko North,Oyede,2,2,0,0,2,0
+Isoko North,Ozoro 1,3,2,1,0,1,1
+Isoko North,Ozoro 2,3,3,0,0,1,1
+Isoko North,Ozoro 3,8,6,2,0,3,0
+Isoko South,Avsiara,3,2,1,0,3,0
+Isoko South,Emede,3,2,1,0,2,1
+Isoko South,Enwhe,1,1,0,0,1,0
+Isoko South,Igbide,2,2,0,0,1,0
+Isoko South,Irri 10,2,1,1,0,1,1
+Isoko South,Irri 11,5,5,0,0,5,0
+Isoko South,Oleh 1,6,3,3,0,3,1
+Isoko South,Oleh 2,7,3,4,0,1,4
+Isoko South,Olomoro,2,1,1,0,1,0
+Isoko South,Umeh/Erowha,1,1,0,0,1,0
+Isoko South,Uzere,2,1,1,0,2,0
+Ndokwa East,Aballa/Inyi/Onuaboh,5,5,0,0,1,1
+Ndokwa East,Aboh/Akarai,5,4,1,0,4,1
+Ndokwa East,Afor/Obikwele,6,6,0,0,3,0
+Ndokwa East,Ase,2,2,0,0,2,0
+Ndokwa East,Ashaka/Ushie,5,3,2,0,2,1
+Ndokwa East,Ibedeni/Azagba,4,4,0,0,3,0
+Ndokwa East,Ibrede/Onu/Iyede-Ame,3,3,0,0,3,0
+Ndokwa East,Okpi/Utchi/Beneku,5,5,0,0,4,1
+Ndokwa East,Ossissa,4,4,0,0,2,0
+Ndokwa East,Umuolu/Onya,3,2,1,0,2,0
+Ndokwa West,Abbi 8,3,2,1,0,0,3
+Ndokwa West,Abbi 9,2,2,0,0,1,0
+Ndokwa West,Emu,5,5,0,0,4,0
+Ndokwa West,Etua,1,1,0,0,1,0
+Ndokwa West,Kwale,12,7,5,0,5,4
+Ndokwa West,Ndemili,6,5,1,0,5,0
+Ndokwa West,Ogume 6,3,3,0,0,2,0
+Ndokwa West,Ogume 7,2,2,0,0,1,1
+Ndokwa West,Onitcha Ukwuani,3,3,0,0,2,0
+Ndokwa West,Utagba Uno,2,2,0,0,1,1
+Okpe,Adagbarassa,2,2,0,0,1,0
+Okpe,Adeje,3,3,0,0,1,0
+Okpe,Aghalokpe,1,1,0,0,1,0
+Okpe,Evwriyen,4,4,0,0,3,0
+Okpe,Mereje,2,1,1,0,2,0
+Okpe,Oha,5,5,0,0,3,0
+Okpe,Okwabude,2,2,0,0,2,0
+Okpe,Orerokpe,4,2,2,0,2,1
+Okpe,Oviri-Okpe,1,1,0,0,1,0
+Okpe,Ughoton,7,6,1,0,4,0
+Oshimili North,Atuma Akwukwu-Igbo,4,3,1,0,1,1
+Oshimili North,Ebu,2,1,1,0,2,0
+Oshimili North,Ezukwu/Ogboli/Achalla,3,2,1,0,2,1
+Oshimili North,Illah,3,2,1,0,2,1
+Oshimili North,Ogbowele,2,1,1,0,1,1
+Oshimili North,Okpanam/Ugbolu,8,4,4,0,3,4
+Oshimili North,Ukalla/Anwalo,3,3,0,0,1,0
+Oshimili North,Umuodafe,2,1,1,0,1,1
+Oshimili South,Akuebolu,3,0,3,0,0,3
+Oshimili South,Cable Point,5,4,1,0,1,1
+Oshimili South,Oko Anala/Amakom,2,2,0,0,2,0
+Oshimili South,Oko Ogbele,1,1,0,0,1,0
+Oshimili South,Okwe,7,5,2,0,3,3
+Oshimili South,Ugbomanta,1,1,0,0,0,0
+Oshimili South,Umuagu,9,7,2,0,1,7
+Oshimili South,Umuaji,4,3,1,0,0,2
+Oshimili South,Umuonaje,3,2,1,0,0,1
+Oshimili South,West End,14,10,3,1,7,5
+Patani,Abari,1,1,0,0,1,0
+Patani,Agoloma,1,1,0,0,1,0
+Patani,Buluangiama,2,2,0,0,2,0
+Patani,Odorubu,5,5,0,0,3,1
+Patani,Patani 3,3,2,1,0,2,1
+Patani,Patani 4,3,3,0,0,3,0
+Patani,Patani 5,1,1,0,0,0,0
+Patani,Toruangiama,1,1,0,0,1,0
+Patani,Uduophori,1,1,0,0,1,0
+Sapele,Abeke,4,4,0,0,1,1
+Sapele,Agbawan,2,2,0,0,1,1
+Sapele,Amukpe,6,6,0,0,1,4
+Sapele,Amuogodo,2,2,0,0,0,1
+Sapele,Ayomanor,1,1,0,0,0,1
+Sapele,Elume,4,4,0,0,4,0
+Sapele,Etamua,3,2,1,0,2,0
+Sapele,Gana,5,5,0,0,2,1
+Sapele,Hausa,1,1,0,0,0,1
+Sapele,Okpe,9,6,2,1,3,2
+Sapele,Ugborhen/Okokporo,3,3,0,0,3,0
+Udu,Aladja,2,2,0,0,1,1
+Udu,Egini,3,3,0,0,3,0
+Udu,Ekete,13,12,1,0,1,7
+Udu,Emadadja,3,2,1,0,2,0
+Udu,Ogbe Udu,2,2,0,0,2,0
+Udu,Opete,1,1,0,0,1,0
+Udu,Orhuwhorun,14,13,1,0,3,8
+Udu,Otor Udu,4,3,1,0,3,0
+Udu,Ovwian,9,9,0,0,3,5
+Udu,Owhrode,3,2,1,0,3,0
+Ughelli North,Afiesere/Ereumukohwaren,4,4,0,0,4,0
+Ughelli North,Agbarha-Otor,8,7,1,0,3,1
+Ughelli North,Agbarho 1,11,6,5,0,3,7
+Ughelli North,Agbarho 2,4,1,3,0,2,2
+Ughelli North,Evwreni,3,2,1,0,2,1
+Ughelli North,Orogun 1,2,1,1,0,2,0
+Ughelli North,Orogun 2-Erhobaro,6,6,0,0,6,0
+Ughelli North,Otor-Ogor,2,2,0,0,2,0
+Ughelli North,Ughelli Urban 1,11,7,4,0,3,6
+Ughelli North,Ughelli Urban 2,18,12,6,0,6,11
+Ughelli North,Uwheru,3,3,0,0,2,0
+Ughelli South,Ekakpamre,9,7,2,0,5,2
+Ughelli South,Ewu 1,7,6,1,0,5,0
+Ughelli South,Ewu 2,4,4,0,0,3,0
+Ughelli South,Ewu 3,3,3,0,0,1,0
+Ughelli South,Jeremi 1,4,4,0,0,2,0
+Ughelli South,Jeremi 2,6,5,1,0,4,0
+Ughelli South,Jeremi 3,6,6,0,0,1,5
+Ughelli South,Jeremi 4,6,6,0,0,5,0
+Ughelli South,Olomu 1,3,3,0,0,2,0
+Ughelli South,Olomu 2,4,4,0,0,4,0
+Ughelli South,Olomu 3-Effurun-Otor,2,2,0,0,2,0
+Ukwuani,Akoku,4,3,1,0,3,0
+Ukwuani,Amai,4,2,2,0,2,2
+Ukwuani,Ebedei,4,4,0,0,4,0
+Ukwuani,Eziokpor,1,1,0,0,1,0
+Ukwuani,Ezionum,2,2,0,0,1,0
+Ukwuani,Ogbeobiaruku,8,3,5,0,3,4
+Ukwuani,Okuzu,10,7,3,0,2,5
+Ukwuani,Umuebu,1,1,0,0,1,0
+Ukwuani,Umukwata,5,5,0,0,2,1
+Ukwuani,Umutu,3,2,1,0,1,2
+Uvwie,Alaka,14,12,1,1,3,6
+Uvwie,Ekpan 10,15,11,3,1,2,2
+Uvwie,Ekpan 9,5,5,0,0,1,1
+Uvwie,Enerhen 3,8,8,0,0,1,1
+Uvwie,Enerhen 4,12,11,1,0,1,1
+Uvwie,Ohorhe,9,7,2,0,6,0
+Uvwie,Ugbomro,10,9,1,0,5,3
+Uvwie,Ugborikoko,17,11,6,0,1,8
+Uvwie,Ugboroke,6,5,1,0,2,2
+Uvwie,Urhumarhu,10,7,3,0,1,4
+Warri North,Abigborode,1,1,0,0,1,0
+Warri North,Abigborodo,1,0,1,0,1,0
+Warri North,Ebrohimi,1,1,0,0,1,0
+Warri North,Eghoro,1,1,0,0,1,0
+Warri North,Gbokoda,2,2,0,0,1,0
+Warri North,Koko,9,7,2,0,5,0
+Warri North,Ogbudugbudu,1,1,0,0,0,0
+Warri North,Ogheye,2,2,0,0,2,0
+Warri North,Okbudugbudu,4,4,0,0,2,0
+Warri North,Opuama,1,1,0,0,1,0
+Warri South,Avenue,7,7,0,0,1,4
+Warri South,Bowen,5,4,0,1,0,2
+Warri South,Ekurede,12,11,0,1,4,6
+Warri South,Esisi,11,11,0,0,0,8
+Warri South,Igbudu,14,14,0,0,1,9
+Warri South,Obodo,3,2,1,0,3,0
+Warri South,Ode-Itsekiri,2,1,1,0,2,0
+Warri South,Okere,13,10,3,0,5,6
+Warri South,Pessu,4,4,0,0,1,0
+Warri South,Ubeji,6,6,0,0,3,2
+Warri South-West,Ajudaibo,1,1,0,0,1,0
+Warri South-West,Isaba,1,1,0,0,1,0
+Warri South-West,Madangho,1,1,0,0,1,0
+Warri South-West,Ogbe-Ijoh,6,4,2,0,4,0
+Warri South-West,Ogidigben,2,1,1,0,2,0
+Warri South-West,Okerenkoko,3,2,1,0,0,0
+Warri South-West,Oporozo,3,2,1,0,3,0
+Warri South-West,Orere,5,5,0,0,1,0
+Warri South-West,Ugborodo,1,1,0,0,1,0
